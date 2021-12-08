@@ -65,10 +65,10 @@ def create_business_account(request):
     created_user = User(username = request.data['Business account']['Name'] , password = request.data['Business account']['Password'])
     created_user.save()
     new_token = Token.objects.create(user = created_user)
-    approved_data['Token'] = new_token.key
+    approved_data['Multix_token'] = new_token.key
     print(new_token.key)
     #Creating the business account
-    serializer_account = create_business_accounts_serializer(data = {**request.data['Business account'] , 'Multix_token' : new_token.key})
+    serializer_account = create_business_accounts_serializer(data = {**request.data['Business account'] , 'Rating' : 2, 'Multix_token' : new_token.key})
     if serializer_account.is_valid():
         final = serializer_account.create(created_user , serializer_account.validated_data)
         approval_account = create_business_accounts_serializer(final)
@@ -106,6 +106,25 @@ def create_business_account(request):
                 return Response(data = {'errors' : serializer_certifications._errors , 'from' : 'cert'})
     return Response(data = approved_data , status = status.HTTP_201_CREATED)
 
+
+@api_view(['POST'])
+@permission_classes([])
+def validate_name(request):
+    print(request.data['Name'])
+    try :
+        account = Business_Account.objects.get(Name = request.data['Name'])
+        return Response(data = {'mesage':'In use'},status = status.HTTP_207_MULTI_STATUS)
+    except :
+        return Response(data = {'message' : 'true'} , status = status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([])
+def validate_phone(request):
+    try :
+        account = Business_Account.objects.get(Contact = request.data['Contact'])
+        return Response(data = {'mesage':'In use'},status = status.HTTP_207_MULTI_STATUS)
+    except :
+        return Response(data = {'message' : 'true'} , status = status.HTTP_200_OK)
 
 #View for updating the profile picture
 @api_view(['PUT'])
@@ -219,8 +238,10 @@ def updating_business_profile(request):
 @authentication_classes((BasicAuthentication ,SessionAuthentication, TokenAuthentication))
 @permission_classes([IsAuthenticated])
 def get_account_detail(request):
-    account_id = request.GET.get('id',30)
-    account = Business_Account.objects.get(id = account_id)
+    w = User.objects.get(username = request.user)
+    account_id = request.GET.get('id',w.id)
+    user = User.objects.get(id = account_id) 
+    account = Business_Account.objects.get(user = user)
     serialized_account = Account_detail(account ,context = {'request' : request})
     print(serialized_account.data)
     return Response(data = serialized_account.data)

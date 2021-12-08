@@ -71,7 +71,7 @@ class business_account_notifications(serializers.ModelSerializer):
     class Meta : 
         model = Notification
         fields = '__all__'
-    def create(self , instance , validated_data):
+    def create(self , validated_data):
         new_notifications = Notification(**validated_data)
         new_notifications.save()
         return new_notifications
@@ -156,6 +156,8 @@ class get_Account(serializers.HyperlinkedModelSerializer):
     Certifications = create_business_account_certifications_serializer(many=True)
     Billing_Info = create_business_account_billing_serializer(many = True)
     Languages = business_account_languages(many = True)
+    Notifications = business_account_notifications(many = True)
+    Contracts = business_account_contract(many = True)
     class Meta :
         model = Business_Account
         exclude = [

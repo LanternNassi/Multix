@@ -35,15 +35,20 @@ class Transaction(models.Model):
 
 class Contract(models.Model):
     Contract_owner_id = models.CharField(max_length=100)
-    Date_started = models.DateField(auto_now_add=True)
-    Deadline = models.DateField(auto_now_add=True)
+    Type = models.CharField(max_length = 300)
+    Date_started = models.DateTimeField(auto_now_add=True)
+    Deadline = models.DateTimeField(auto_now_add=True)
     Status = models.CharField(max_length= 100)
     Gig_id = models.CharField(max_length=200)
+    Negotiated_price = models.CharField(max_length=3000)
 
 
 class Notification(models.Model):
+    notifier_id = models.CharField(max_length=20)
+    Type_id = models.CharField(max_length = 300)
     Type = models.CharField(max_length=100)
     Message = models.CharField(max_length=5000)
+    Date = models.DateTimeField()
 
 class Review(models.Model):
     Reviewer_id = models.CharField(max_length = 100)
@@ -56,6 +61,7 @@ class Review(models.Model):
 class Business_Account(models.Model):
     user = models.ForeignKey(User , on_delete=models.CASCADE)
     Multix_general_account_id = models.CharField(verbose_name= 'general id' , blank = False , null = False , max_length = 100)
+    Notifications_token = models.CharField(verbose_name='Notifications ids' , max_length=3000)
     Multix_token = models.CharField(verbose_name = "Multix ids", blank = False , max_length = 100)
     Name = models.CharField(verbose_name="Names",blank=False,max_length=100)
     Password = models.CharField(verbose_name="Passwords" , blank = False , null = False , max_length = 20)

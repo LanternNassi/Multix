@@ -26,6 +26,8 @@ from Business_Accounts.views import (
     updating_business_profile,
     updating_profile_pic_account,
     get_account_detail,
+    validate_name,
+    validate_phone,
 
 )
 from Gigs.views import (
@@ -35,6 +37,13 @@ from Gigs.views import (
     updating_gig_case_2,
     get_gigs,
     gig_detail,
+    hot_deal_apply,
+    hot_deal_bidders,
+    selling_create,
+    get_proposals_and_contracts,
+    approve_gig,
+    approve_finished_gig,
+    Hiring_applicant
 )
 
 
@@ -50,7 +59,16 @@ urlpatterns = [
     path('<int:id>/gig_case_2' , updating_gig_case_2 , name = 'Show Case 2' ),
     path('fill_gigs/',get_gigs,name = 'Get gigs'),
     path('gig_detail/',gig_detail,name='Gig detail'),
-    path('account-detail/' , get_account_detail , name = 'Account detail')
+    path('account-detail/' , get_account_detail , name = 'Account detail'),
+    path('hot_deal_bidders/',hot_deal_bidders , name = "Get hot deal bidders"),
+    path('create_bidder',hot_deal_apply,name = 'Create bidder'),
+    path('selling_create',selling_create,name = 'Create seller appplicant'),
+    path('fetch_contracts_notifications_proposals/',get_proposals_and_contracts , name = 'Fetching contracts notifs and proposals'),
+    path('Approve_gig' , approve_gig , name = 'Approve gig'),
+    path('approve_finished_gig' , approve_finished_gig , name = 'Approve finished gig'),
+    path('create_hiring_applicant' , Hiring_applicant , name = 'Create a hiring applicant'),
+    path('Validate_name' , validate_name , name = 'Validate the name'),
+    path('Validate_number' , validate_phone , name = 'validate_number')
     
 ] 
 

@@ -5,6 +5,7 @@ from .models import (
     Gig_Transaction,
     Gig_Additional_info,
     Gig,
+    Gig_Deal_Applicant
 )
 from django.contrib.auth.models import User
 
@@ -17,7 +18,7 @@ class Gig_Applicant_serializer(serializers.ModelSerializer):
     '''Class for serializing Gig Applicants '''
     class Meta : 
         model = Gig_Applicant
-        field = '__all__'
+        fields = '__all__'
     def create(self , validated_data):
         new_applicant = Gig_Applicant(**validated_data)
         new_applicant.save()
@@ -28,11 +29,22 @@ class Gig_Applicant_serializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
+
+class Gig_Deal_Applicant_serializer(serializers.ModelSerializer):
+    class Meta :
+        model = Gig_Deal_Applicant
+        fields = '__all__'
+    def create(self , validated_data): 
+        new_deal_applicant = Gig_Deal_Applicant(**validated_data)
+        new_deal_applicant.save()
+        return new_deal_applicant
+
 class Gig_Project_completed_serilizer(serializers.ModelSerializer):
     '''Serializer for serializing gig active projects '''
     class Meta : 
         model = Gig_Project_Completed
-        field = '__all__'
+        fields = '__all__'
     def create(self , validated_data):
         new_project = Gig_Project_Completed(**validated_data)
         new_project.save()
@@ -119,6 +131,9 @@ class Gig_serializer(serializers.ModelSerializer):
 # ======================================Start of fetching serializers======================================================
 class gigs (serializers.HyperlinkedModelSerializer):
     Gig_info = Gig_Additional_info_serializer(many=True)
+    Gig_Deals_Applicants = Gig_Deal_Applicant_serializer(many = True)
+    Gig_Projects = Gig_Project_completed_serilizer(many = True)
+    Gig_Applicants = Gig_Applicant_serializer(many = True)
     class Meta :
         model = Gig
         exclude = [
@@ -136,9 +151,14 @@ class slicer_gigs(serializers.Serializer):
     ShowCase_1 = serializers.CharField( required=None,initial='None')
     Gig_id = serializers.CharField()
     Account_id = serializers.CharField()
+    Count = serializers.IntegerField()
 
+class slicer_hot_deal_bidders(serializers.Serializer):
+    Name = serializers.CharField(required=True)
+    Profile_pic = serializers.CharField()
+    Bid_amount = serializers.IntegerField()
+    Date_of_application = serializers.DateTimeField()
 
-       
 
 
 

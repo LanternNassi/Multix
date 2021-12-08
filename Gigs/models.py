@@ -4,23 +4,28 @@ from django.utils.timezone import datetime
 
 
 class Gig_Applicant(models.Model):
-    user_id = models.CharField(max_length=200 , null = False , blank = False)
-    Date_of_application = models.DateField(auto_now_add=True)
-    Approved = models.BooleanField(default = True)
+    gig_id = models.CharField(max_length=1000)
+    Account_id_of_customer = models.CharField(max_length=200 , null = False , blank = False)
+    Date_of_application = models.DateTimeField()
+    Approved = models.CharField(default = False , max_length = 300)
 
 
 class Gig_Project_Completed(models.Model):
+    '''For managing Selling deals'''
     gig_id = models.CharField(max_length=200 )
-    Account_id_of_customer = models.CharField(max_length=200 )
-    Date_of_application = models.DateField(auto_now_add=True)
-    Approved = models.BooleanField(default=True)
+    Account_id_of_customer = models.CharField(max_length=200)
+    Date_of_application = models.DateTimeField()
+    Extra_info = models.CharField(max_length = 10000)
+    Approved = models.CharField(default=False , max_length = 300)
+
 
 class Gig_Deal_Applicant(models.Model):
+    '''For managing Hot deals '''
     gig_id = models.CharField(max_length = 200)
     Bid_amount = models.IntegerField(blank = False)
     Account_id_of_customer = models.CharField(max_length=200)
-    Date_of_application = models.DateField(auto_now_add=True)
-    Approved = models.BooleanField(default=False)
+    Date_of_application = models.DateTimeField()
+    Approved = models.CharField(default=False , max_length = 300)
 
 
 class Gig_Transaction(models.Model):
@@ -49,8 +54,8 @@ class Gig(models.Model):
     Gig_date_of_creation = models.DateTimeField(verbose_name=" Dates " , auto_now_add=True)
     Gig_days_of_completion = models.IntegerField( null = True , blank = True )
     Gig_deadline = models.DateField(verbose_name='Deadlines' , null = True, auto_now_add=True)
-    Gig_expiration_date = models.DateTimeField(verbose_name="Gig Expirations" ,null = True, blank = True, auto_now_add=True )
-    Gig_payment_mode = models.CharField(verbose_name="Payment modes", max_length=12,blank=False)
+    Gig_expiration_date = models.DateTimeField(verbose_name="Gig Expirations" ,null = True, blank = True )
+    Gig_payment_mode = models.CharField(verbose_name="Payment modes", max_length=300,blank=False)
     Gig_salary = models.IntegerField(blank = False)
     Gig_location = models.CharField(verbose_name = 'Locations' , blank = True , null = True , default = 'Uganda' , max_length=100)
     Gig_negotiation = models.BooleanField(default=True , verbose_name="Negotiable")
