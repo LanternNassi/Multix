@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
+import django_heroku
+import cloudinary
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
@@ -44,7 +47,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'channels',
     'channels_postgres',
-
+    'cloudinary_storage',
+    'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -94,12 +98,12 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_postgres.core.PostgresChannelLayer',
         'CONFIG': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'test_2',
-            'USER': 'postgres',
-            'PASSWORD': 'Nassim',
-            'HOST': '127.0.0.1',
-            'PORT': '5432',
+         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+         'NAME': 'multixbusiness',
+         'USER': 'postgres',
+         'PASSWORD': 'ntambinassim',
+         'HOST': 'multixbusiness.c3cyw3txnh6g.af-south-1.rds.amazonaws.com',
+         'PORT': '5432',
         },
     },
 }
@@ -115,14 +119,20 @@ DATABASES = {
     #},
       'default': {
 		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': 'test_2',
+		'NAME': 'multixbusiness',
 		'USER': 'postgres',
-		'PASSWORD': 'Nassim',
-		'HOST': '127.0.0.1',
+		'PASSWORD': 'ntambinassim',
+		'HOST': 'multixbusiness.c3cyw3txnh6g.af-south-1.rds.amazonaws.com',
 		'PORT': '5432',
 	},
   
 }
+
+
+
+prod_db  =  dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(prod_db)
+
 
 
 # Password validation
@@ -158,15 +168,49 @@ USE_L10N = True
 USE_TZ = True
 
 
+django_heroku.settings(locals())
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = '/static/'
+StATICFILES_DIRS = [ os.path.join(BASE_DIR , "static") ]
 
 
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "Media")
-MEDIA_URL = "/Media/"
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+
+CLOUDINARY_STORAGE = {
+   'CLOUD_NAME': 'nnana',
+   'API_KEY': '295256691468576',
+   'API_SECRET': 'QylwLM68WEPocm00emu3aZNqh_A',
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# MEDIA_ROOT = os.path.join(BASE_DIR, "Media")
+# MEDIA_URL = "/Media/"
+
+# Aws config
+
+# AWS_LOCATION = 'static'
+# AWS_ACCESS_KEY_ID ='AKIAZPSDYV63VD6XYDLO' 
+# AWS_SECRET_ACCESS_KEY = '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'
+# AWS_STORAGE_BUCKET_NAME ='multixapp'
+# AWS_S3_CUSTOM_DOMAIN='%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+# AWS_S3_OBJECT_PARAMETERS = {    
+#      'CacheControl': 'max-age=86400',
+# }
+# DEFAULT_FILE_STORAGE = 'app.storage_backends.MediaStorage'
+# STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ] 
+# STATIC_URL='https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
+# ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
+# STATICFILES_FINDERS = (           
+#     'django.contrib.staticfiles.finders.FileSystemFinder',    
+#     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+# )
+# AWS_DEFAULT_ACL = None

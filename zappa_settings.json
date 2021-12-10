@@ -1,0 +1,14 @@
+{
+    "dev": {
+        "aws_region": "eu-west-2",
+        "django_settings": "Multix_business.settings",
+        "profile_name": "default",
+        "project_name": "multix-business",
+        "runtime": "python3.7",
+        "s3_bucket": "zappa-zydtcp0d2",
+        "vpc_config" : {
+            "SubnetIds" : ["subnet-0265d98a3cbcf54fd","subnet-0e4f493ff0c64ab4d"],
+            "SecurityGroupIds" : ["sg-0b58cf7b342cef0e7"]
+        }
+    }
+}
