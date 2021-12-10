@@ -8,57 +8,38 @@ export class Message extends Component {
     constructor(props){
         super(props)
     }
-    render() {
-        if (this.props.type === "Sender"){
-            return (
-                <View>
-                <View style = {{ ...styles.container , backgroundColor : this.props.state.theme.icons_surrounding , 
-                    left : ScreenWidth - 190 ,
-                    elevation : 5
-                    
-                     }}>
-                         <View style = {{ ...styles.image_wrapper , left : 150 , backgroundColor : 'white', 
-                    }}>
-                        <Avatar source = {require('../images/test.jpg')} rounded size = {"small"} />
-                    </View>
 
-                    
-                    <View style = {styles.text}>
-                        <Text style = {styles.message_text} >
+    convert_time_to_12 = (time) => {
+        if ( time.slice(0,2) > 12){
+            let new_date = time.slice(0,2)-12 + time.slice(2,time.length) + ' pm'
+            return new_date
+        } else {
+            return time + ' am'
+        }
+    }
+
+    render() {
+        if (!this.props.type){
+            return (
+                <View style = {{ alignItems : 'center' }} >
+                <View style = {{  backgroundColor : this.props.fun.Layout_Settings.Message_component, ...styles.container}}> 
+                        <Text style = {{...styles.message_text, color : this.props.fun.Layout_Settings.Message_text_color }}>
                             {this.props.messo}
                         </Text>
-                    </View>
-                    
                 </View>
-                <Text  style = {{ left : 160  }} >  Seen at 12:35pm.  </Text>
+                <Text style = {{ fontWeight : 'bold' , fontSize : 10}}>{ this.convert_time_to_12(this.props.date)  }</Text>
                 </View>
             )
 
         } else {
             return (
-                <View>
-                <View style = {{ ...styles.container ,
-                 backgroundColor : this.props.state.theme.icons ,
-                 elevation : 5,
-                 left : 10,
-                   borderBottomRightRadius : 0 ,
-                   borderBottomLeftRadius : 20,
-                   alignItems : 'center',
-                   
-                   
-                    }}>
-                        <View style = {{ ...styles.image_wrapper , right : 150, backgroundColor : this.props.state.icons_surrounding }}>
-                        <Avatar source = {require('../images/test.jpg')} rounded size = {"small"} />
-                    </View>
-                    
-                    <View style = {styles.text}>
-                        <Text style = {{...styles.message_text, color : 'black'}} >
-                            Thi is it bro . How are u doig over there , hope ur doing great . Am also doing great ...
+                <View  style = {{ alignItems : 'center'}}>
+                <View style = {{  backgroundColor : this.props.fun.Layout_Settings.Sender_component, ...styles.container}}> 
+                        <Text style = {{...styles.message_text , color :  this.props.fun.Layout_Settings.Sender_text_color }}>
+                            {this.props.messo}
                         </Text>
-                    </View>
-                    
                 </View>
-                <Text  style = {{ left : 80  }} >  Seen at 12:35pm.  </Text>
+                <Text>{ this.convert_time_to_12(this.props.date) }</Text>
                 </View>
             )
 
@@ -67,8 +48,10 @@ export class Message extends Component {
     }
 }
 
-const mapStateToProps = (state) => {
-    return({state}) 
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state , fun} 
 }
 
 
@@ -78,39 +61,37 @@ export default connect(mapStateToProps, null)(Message)
 
 const styles = StyleSheet.create({
     container : {
-        width :180,
-        flexDirection : 'column',
-        minHeight : 70,
-        borderRadius : 20,
-        justifyContent : 'center',
+        maxWidth :0.75 * ScreenWidth,
+        padding : 11,
+        flexWrap : 'nowrap',
+        minHeight : 0.04 * ScreenHeight,
+        borderRadius : 8,
         alignItems : 'center',
-        borderBottomLeftRadius : 0,
         
-        
-       
-
     },
     image_wrapper : {
-        
         height : 40,
         width : 40 ,
         borderRadius : 20,
+        top : 0,
         alignItems : 'center',
         justifyContent : 'center',
-        position : 'absolute',
+        position : 'relative',
         zIndex : 1,
         top : 0,
         
     },
     text : {
-
-        width : 160,
+        maxWidth : 0.5 * ScreenWidth,
         justifyContent : 'center',
         alignItems : 'center',
+        position : 'relative'
     },
     message_text : {
-        fontWeight : "700",
-        color : 'white'
+        fontWeight : "bold",
+        fontSize : 14,
+        color : 'white',
+
     }
 
 

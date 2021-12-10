@@ -4,10 +4,8 @@ import * as SQLite from 'expo-sqlite'
 import {connect} from 'react-redux';
 
 export class business_database{
-    constructor(){
-
-    }
-    business_data =  () => {
+   
+    static business_data =  () => {
         const db = SQLite.openDatabase('Business_database.db')
         const profile = {}
         db.transaction(
@@ -81,7 +79,7 @@ export class business_database{
         )
         return profile
     }
-    gig_data = () => {
+    static gig_data = () => {
         const db = SQLite.openDatabase('Business_database.db')
         let Gigs = []
         db.transaction((tx)=>{

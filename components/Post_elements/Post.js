@@ -12,8 +12,6 @@ export default function Post() {
     
         <View style = {styles.container}>
 
-            
-
             <View style = {styles.av} >
                 <SkeletonContent isLoading = {loading}  containerStyle = {{height : 50 , width : 50 , borderRadius : 25}} layout = {[
                     {key : 'pic' , height : 70 , width : 70 , borderRadius : 35, elevation : 5}
@@ -22,7 +20,7 @@ export default function Post() {
                 </SkeletonContent>
             </View>
             <View style = {styles.post} >
-            <Card containerStyle = {{borderTopRightRadius : 35}}>
+            <Card containerStyle = {{borderTopRightRadius : 35 , width : 0.95 * ScreenWidth}}>
 
                 <SkeletonContent isLoading = {loading} containerStyle = {{width : 200 , height : 10 }} layout = {[
                     {key : 'image' , height : 10 , width : 200 , elevation :5}
@@ -152,7 +150,8 @@ const styles = StyleSheet.create({
         maxHeight : 900,
         flexDirection : 'column',
         justifyContent : 'space-around',
-        alignItems : 'flex-end',
+        alignItems : 'center',
+        width : 0.98 * ScreenWidth
         
 
     },

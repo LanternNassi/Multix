@@ -3,12 +3,14 @@ import Theme from '../../constants/Theme.js'
 import * as mime from 'react-native-mime-types'
 import FormData, {getHeaders} from 'form-data'
 import axios from 'axios'
+import Gig_notifications from '../../websockets/Gig_notifications.js'
 
 let Overall_State = {
     Business_profile : {},
     Username : 'Lantern',
     navigation : 'navigate',
     business_profile_edit_done : true,
+    close_open_bidders : false,
     done : 'no',
     Business_database : '',
     friends : [
@@ -42,7 +44,7 @@ let Overall_State = {
 }
 
 
-export default Navigate_Reducer = (state = Overall_State , action) => {
+export default BusinessReducer = (state = Overall_State , action) => {
     switch(action.type){
         case 'Navigate':{
             return {
@@ -56,26 +58,14 @@ export default Navigate_Reducer = (state = Overall_State , action) => {
             }
             break;
         }
-        case 'current_chat': {
-            return {
-                ...state , current_chat : action.name
-            }
-        }
+       
         case 'done' : {
             return {
                 ...state , business_profile_edit_done : action.decide
             }
 
         }
-        case 'message_handler': {
-            let name = 'Daniel'
-            state.messages.Daniel.push({'type' : 'Sender' , message : action.message})
-            state.messages.Daniel.reverse()
-    
-            return {
-                ...state
-            }
-        }
+       
         case 'initiate_business_sign_up':{
 
             return{
@@ -123,6 +113,12 @@ export default Navigate_Reducer = (state = Overall_State , action) => {
                 ...state
             }
 
+        }
+        case 'close_open_bidders' : {
+            state['close_open_bidders'] = action.value
+            return {
+                ...state
+            }
         }
         case 'Pic' : {
             const newImageUri = "file:///" + action.pic.split("file:/").join("")
@@ -187,6 +183,7 @@ export default Navigate_Reducer = (state = Overall_State , action) => {
         case 'create_business_request_instances' : {
             state['request_business_json'] = axios.create({
                 baseURL : 'http://192.168.43.232:8000',
+                timeout : 1000000,
                 headers : { 
                     'content-type' : 'application/json',
                     'Authorization': 'Token ' + action.token ,
@@ -200,10 +197,20 @@ export default Navigate_Reducer = (state = Overall_State , action) => {
                     
                 }
             })
+            return {
+                ...state
+            }
 
         }
+     
         case 'update_bus_profile' : {
             state.Business_profile[action.key] = action.value
+            return {
+                ...state
+            }
+        }
+        case 'after_creating_gig' : {
+            state.Business_profile['Gigs'].push(action.gig)
             return {
                 ...state
             }
@@ -224,7 +231,19 @@ export default Navigate_Reducer = (state = Overall_State , action) => {
                 ...state
             }
         }
-        
+        /// Websocket for Gig notifications 
+        case 'create_business_websocket_instances' : {
+            state['ws_gig_notifications'] = action.Instance
+            return {
+                ...state
+            }
+        }
+        case 'ws_gig_notifications_message' :{
+                state['Contracts_proposals'] = action.Message
+            return {
+                ...state
+            }
+        }
         
         default :
             return state;

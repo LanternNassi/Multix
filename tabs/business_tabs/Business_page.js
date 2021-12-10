@@ -15,43 +15,66 @@ import axios from 'axios'
 export function Business_page(props) {
     const [IsReady , SetIsReady] = useState(false)
     const [data , Setdata] = useState(null)
-    const get_resources = () =>{
-        axios({
-            method : 'GET',
-            url : 'http://192.168.43.232:8000/fill_gigs/?Gig_type=Hiring' ,
-            headers : { 
-                'content-type' : 'application/json',
-                'Authorization': 'Token ' + props.state.Business_profile['Account']['Multix_token'] ,
-            },
-            data : {},
+    const [open , setopen] = useState(false)
 
-        }).then((response)=>{
-            if (response.status === 202){
-                Setdata(response.data)
-                SetIsReady(true)
-            }
-        })
+    const get_resources = () =>{
+        if (props.state.Business_profile.Account){
+            axios({
+                method : 'GET',
+                url : 'http://192.168.43.232:8000/fill_gigs/?Gig_type=Selling' ,
+                headers : { 
+                    'content-type' : 'application/json',
+                    'Authorization': 'Token ' + props.state.Business_profile['Account']['Multix_token'] ,
+                },
+                data : {},
+    
+            }).then((response)=>{
+                setopen(true)
+                if (response.status === 202){
+                    Setdata(response.data)
+                    SetIsReady(true)
+                }
+            },()=>{
+              
+              
+            })
+        }
+       
     }
+
+    //const persist = () => {
+      //  if (!open){
+        //    get_resources()
+          //  setTimeout(()=>{persist()},2000)
+        //}
+    //}
+
     useEffect(()=>{
-        get_resources()
-    },[])
+        if (props.state.Business_profile.Account){
+            //persist()
+            get_resources()
+        }
+        },[])
    
     const query_resources = (name)=>{
-        axios({
-            method : 'GET',
-            url : 'http://192.168.43.232:8000/fill_gigs/?Gig_type=Selling&Gig_name=' + name ,
-            headers : { 
-                'content-type' : 'application/json',
-                'Authorization': 'Token ' + props.state.Business_profile['Account']['Multix_token'] ,
-            },
-            data : {}
-        }).then((response)=>{
-            if (response.status === 202){
-                Setdata(response.data)
-                SetIsReady(true)
-            }
-        })
-
+        if (props.state.Business_profile.Account){
+            axios({
+                method : 'GET',
+                url : 'http://192.168.43.232:8000/fill_gigs/?Gig_type=Selling&Gig_name=' + name ,
+                headers : { 
+                    'content-type' : 'application/json',
+                    'Authorization': 'Token ' + props.state.Business_profile['Account']['Multix_token'] ,
+                },
+                data : {}
+            }).then((response)=>{
+                if (response.status === 202){
+                    Setdata(response.data)
+                    SetIsReady(true)
+                }
+            })
+    
+        }
+        
     }
     if (props.state.Business_profile.Account){
         return (
@@ -59,38 +82,7 @@ export function Business_page(props) {
                 flex :1 ,
             }}>
                 <View style = {styles.categorizer}>
-                    <View style = {{
-                        width : ScreenWidth,
-                        height : 40,
-                        flexDirection : 'row',
-                        justifyContent : 'space-around',
-                        alignItems : 'center'
-                    }}>
-                        <Text style = {{
-                            fontSize : 14.5,
-                            fontWeight : 'bold',
-                        }}>
-                            Sort By : 
-                        </Text>
-                        <TouchableOpacity style = {styles.chips}>
-                            <Text>
-                                Recent
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style = {styles.chips}>
-                            <Text>
-                                Top Rated
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style = {styles.chips}>
-                            <Text>
-                                Online
-                            </Text>
-                        </TouchableOpacity>
-    
-    
-    
-                    </View>
+                  
                     <View>
                         <TextInput style = {{
                             width : 0.8 * ScreenWidth,
@@ -214,13 +206,26 @@ export function Business_page(props) {
                                                 <Text > Salary :  {value} </Text>
                                             )}
                                             />
-                                      <TouchableOpacity style = {{...styles.propose , backgroundColor : props.state.theme.icons_surrounding}}>
-                                          <Text style = {{
-                                              color : 'white',
-                                          }}>
-                                              Talk more
-                                          </Text>
-                                      </TouchableOpacity>    
+                                            {
+                                                    item.item.Account_id == props.state.Business_profile.Account.user_id ? (
+                                                        null
+                                                    ) : (
+                                                        <TouchableOpacity onPress = {
+                                                            () => {
+                                                                props.state.navigation.navigation.navigate('information' , {account : item.item})
+                  
+                                                            }
+                                                        } style = {{...styles.propose , backgroundColor : props.fun.Layout_Settings.Icons_surroundings}}>
+                                                            <Text style = {{
+                                                                color : 'white',
+                                                            }}>
+                                                                Talk more
+                                                            </Text>
+                                                        </TouchableOpacity>    
+                                                    )
+
+                                            }
+                                      
                                   </View>
                               </TouchableOpacity>
                           )
@@ -242,8 +247,8 @@ export function Business_page(props) {
                     }
                 }>
                     <Avatar containerStyle = {{
-                        backgroundColor : props.state.theme.icons_surrounding,
-                    }} icon = {{ name : 'add' , type : 'MaterialCommunityIcons', color : 'white' , size : 18 }} size = {'medium'} rounded/>
+                        backgroundColor : props.fun.Layout_Settings.Icons_surroundings,
+                    }} icon = {{ name : 'add' , type : 'MaterialCommunityIcons', color : props.fun.Layout_Settings.Icons_Color , size : 18 }} size = {'medium'} rounded/>
                 </TouchableOpacity>
     
                 
@@ -276,8 +281,10 @@ export function Business_page(props) {
 const mapDispatchToProps = (dispatch) =>({
     
 })
-const mapStateToProps = (state) => {
-    return {state}
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state,fun}
 
 }
 
@@ -303,7 +310,7 @@ const styles = StyleSheet.create({
     },
     categorizer : {
         width : ScreenWidth,
-        height : 0.23 * ScreenWidth,
+        height : 0.15 * ScreenWidth,
         elevation : 10,
         backgroundColor : 'white',
         flexDirection : 'column',

@@ -18,8 +18,8 @@ export const Extra_info = (props) => {
     const [Days , setDays] = useState('')
     const [pressed , setpressed] = useState(false)
     const [items, setItems] = useState([
-        {label: 'Apple', value: 'apple'},
-        {label: 'Banana', value: 'banana'}
+        {label: 'Multix Express', value: 'Multix Express'},
+
     ]);
     const [tags_Pref , settags_Pref] = useState({
         tag : '',
@@ -127,10 +127,11 @@ export const Extra_info = (props) => {
                     if (Type === 'Hiring' || Type === 'Hot deals'){
                         props.send_Prefs(tags_Pref['tagsArray'])
                     }
+                    props.send_Payment(value)
                     props.state.navigation.navigation.navigate('Show Case' , { type : Type })
                 }
             }
-        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.state.theme.icons_surrounding, justifyContent : 'center' , alignItems : 'center'  }}>
+        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.fun.Layout_Settings.Icons_Color, justifyContent : 'center' , alignItems : 'center'  }}>
             <Text style = {{color : 'white'}}>Next</Text>
         </TouchableOpacity>
 
@@ -141,8 +142,10 @@ export const Extra_info = (props) => {
     )
 }
 
-const mapStateToProps = (state) => {
-    return {state}
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state,fun}
     
 }
 

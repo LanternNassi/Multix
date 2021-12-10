@@ -10,17 +10,24 @@ import TagInput from 'react-native-tags-input'
 import FormData, {getHeaders} from 'form-data';
 import * as FileSystem from 'expo-file-system';
 import * as SQLite from 'expo-sqlite';
+import Spinner from 'react-native-loading-spinner-overlay'
 import business_database from '../redux/Database_transactions.js'
 
 
 export const Category = (props) => {
     const [open, setOpen] = useState(false);
+    const [spin , setspin] = useState(false)
     const [value, setValue] = useState(null);
     const [Description , setDescription] = useState('')
     const [pressed , setpressed] = useState(false)
     const [items, setItems] = useState([
-        {label: 'Apple', value: 'apple'},
-        {label: 'Banana', value: 'banana'}
+        {label: 'Agriculture related gig', value: 'Agriculture'},
+        {label: 'Constructions such as Architecture', value: 'Constructions'},
+        {label: 'Education related', value: 'Education'},
+        {label: 'Business Management', value: 'Business'},
+        {label: 'Arts related', value: 'Arts'},
+        {label: 'Health', value: 'Health'},
+        {label: 'Technology (Tech such as Robotics etc)', value: 'Tech'}
     ]);
     const [ Type , setType ] = useState('')
     const [tags_Pref , settags_Pref] = useState({
@@ -120,6 +127,14 @@ export const Category = (props) => {
                     }
                 }
             />
+             <Spinner
+                visible={spin}
+                textContent={'Creating Gig ...'}
+                textStyle={{
+                    color : 'white',
+                    fontSize : 16,
+                }}
+            />
             <View style = {{
                 height : 0.11 * ScreenHeight,
                 justifyContent : 'space-between',
@@ -150,17 +165,24 @@ export const Category = (props) => {
                     setpressed(true)
                     props.send_description(Description)
                     props.send_genre(value)
+                    setspin(true)
                     setTimeout(()=>{
                         try{
-                            const pics = []
                             const form_data = new FormData()
+                            const pics = []
+                            if (props.state.Gig_sign_up.images){
+                                for(let i = 0 ; i <= 3 ; i++){
+                                    if (props.state.Gig_sign_up.images['ShowCase_'+(i+1)]){
+                                        form_data.append('ShowCase_'+(i+1) , props.state.Gig_sign_up.images['ShowCase_'+(i+1)])
+                                        pics.push(props.state.Gig_sign_up.images['ShowCase_'+(i+1)])
+                                    }
+                                }
+                            }
+                           
                             const Data = {}
                             Data['word_info'] = {...props.state.Gig_sign_up.word_info}
-                            Data['Additional_info'] = {...props.state.Gig_sign_up.Additional_info}
-                            for(let i = 0 ; i <= 3 ; i++){
-                                form_data.append('ShowCase_'+(i+1) , props.state.Gig_sign_up.images['ShowCase_'+(i+1)])
-                                pics.push(props.state.Gig_sign_up.images['ShowCase_'+(i+1)])
-                            }
+                            Data['Additional_info'] = props.state.Gig_sign_up.Additional_info?([...props.state.Gig_sign_up.Additional_info]) : ([])
+                           
                             props.state.request_business_json({
                                 method : 'POST',
                                 url : '/create_gig',
@@ -177,21 +199,52 @@ export const Category = (props) => {
                                         (pics[2]) ? saved_pictures[2] : null ,
                                         (pics[3]) ? saved_pictures[3] : null ,
                                     ]
-                                    const add_info = props.state.Gig_sign_up.Additional_info
-                                    props.state.request_business_form({
-                                        method : 'PUT',
-                                        url : response.data['Gig_id'] + '/gig_case',
-                                        data : form_data,
-                                    }).then((response)=>{ 
-                                        let id = store_gig_to_database(profile,add_info,1)
-                                        //const database = new business_database()
-                                        //let gigs = database.gig_data()
-                                        console.log(gigs)
-                                        props.store_gigs_redux(gigs)
-                                        setTimeout(()=>{
-                                            props.state.navigation.navigation.navigate('Gig',{Server_id : id})
-                                        },1000)
-                                    })
+                                    const add_info = props.state.Gig_sign_up.Additional_info ? props.state.Gig_sign_up.Additional_info : []
+                                    const gig = {}
+                                    const info = response.data['Gig_account']
+                                    info['Server_id'] = response.data['Gig_id']
+                                    if (props.state.Gig_sign_up.images){
+                                        info['ShowCase_1'] = props.state.Gig_sign_up.images['ShowCase_1'] ? (props.state.Gig_sign_up.images['ShowCase_1'].uri) : (null)
+                                        info['ShowCase_2'] = props.state.Gig_sign_up.images['ShowCase_2'] ? (props.state.Gig_sign_up.images['ShowCase_2'].uri) : (null)
+                                        info['ShowCase_3'] = props.state.Gig_sign_up.images['ShowCase_3'] ? (props.state.Gig_sign_up.images['ShowCase_3'].uri) : (null)
+                                        info['ShowCase_4'] = props.state.Gig_sign_up.images['ShowCase_4'] ? (props.state.Gig_sign_up.images['ShowCase_4'].uri) : (null)
+                                    } else {
+                                        info['ShowCase_1'] = null
+                                        info['ShowCase_2'] = null
+                                        info['ShowCase_3'] = null
+                                        info['ShowCase_4'] = null
+                                    }
+                                   
+                                    gig['Gig_info'] = info
+                                    const adds_info = []
+                                    if (props.state.Gig_sign_up.Additional_info){
+                                        for(let i = 0; i<add_info.length; i++){
+                                            adds_info.push({'Name' : add_info[i]})
+                                        }
+                                    }
+                                    gig['Gig_adds'] = adds_info
+                                    gig['Gig_applicants'] = []
+                                    gig['Gig_projects'] = []
+                                    gig['Gig_transactions'] = []
+                                    props.store_created_gig(gig)
+                                    if (props.state.Gig_sign_up.images){
+                                        props.state.request_business_form({
+                                            method : 'PUT',
+                                            url : response.data['Gig_id'] + '/gig_case',
+                                            data : form_data,
+                                        }).then((response)=>{ 
+                                            let id = store_gig_to_database(profile,add_info,1)
+                                            setTimeout(()=>{
+                                                setspin(false)
+                                                props.state.navigation.navigation.navigate('Gig',{Server_id : info.Server_id})
+                                            },1000)
+                                        })
+                                    } else {
+                                        setspin(false)
+                                        props.state.navigation.navigation.navigate('Gig',{Server_id : info.Server_id})
+
+                                    }
+                                  
                                 }
                             })
 
@@ -205,7 +258,7 @@ export const Category = (props) => {
 
 
             }
-        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.state.theme.icons_surrounding, justifyContent : 'center' , alignItems : 'center'  }}>
+        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.fun.Layout_Settings.Icons_Color, justifyContent : 'center' , alignItems : 'center'  }}>
             <Text style = {{color : 'white'}}>Finalize</Text>
         </TouchableOpacity>
 
@@ -218,15 +271,17 @@ export const Category = (props) => {
     )
 }
 
-const mapStateToProps = (state) => {
-    return {state}
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state,fun}
     
 }
 
 const mapDispatchToProps = (dispatch) => ({
     send_description : (Description) => dispatch({type : 'gig_word_info' , key : 'Gig_description' , value : Description}),
     send_genre : (Genre) => dispatch({type : 'gig_word_info' , key : 'Gig_genre' , value : Genre}),
-    store_gigs_redux : (Gigs) => dispatch({type : 'update_bus_profile' , key : 'Gigs' , value : Gigs}),
+    store_created_gig : (gig) => dispatch({type : 'after_creating_gig' , gig : gig}),
 
     
 })

@@ -14,6 +14,7 @@ import FormData, {getHeaders} from 'form-data';
 import * as SQLite from 'expo-sqlite'
 import { documentDirectory } from 'expo-file-system'
 import business_database from '../redux/Database_transactions.js'
+import Spinner from 'react-native-loading-spinner-overlay'
 
 const mainColor = '#3ca897';
 const sign_up = {
@@ -68,6 +69,7 @@ export class Screen_6_Preferences extends Component{
         this.state = {
           current_style : sign_up,
           Signing_up : false,
+          spin : false,
           created : false,
           submitted : false,
           tags_Certs: {
@@ -84,13 +86,18 @@ export class Screen_6_Preferences extends Component{
       }
 
       storing_profile_pic_to_folder = async (pic) => {
-        const profile_pic_directory = await FileSystem.getInfoAsync(FileSystem.documentDirectory + 'Multix Photos/Profile Pictures/')
-        if (!profile_pic_directory){
-          await FileSystem.makeDirectoryAsync(profile_pic_directory, {intermediates : true})
+        if (pic){ 
+          const profile_pic_directory = await FileSystem.getInfoAsync(FileSystem.documentDirectory + 'Multix Photos/Profile Pictures/')
+          if (!profile_pic_directory){
+            await FileSystem.makeDirectoryAsync(profile_pic_directory, {intermediates : true})
+          }
+          const new_uri = FileSystem.documentDirectory + 'Multix Photos/Profile Pictures/' + pic.name
+          await FileSystem.copyAsync({from : pic.uri , to : new_uri })
+          return new_uri
+        }else {
+          return null
         }
-        const new_uri = FileSystem.documentDirectory + 'Multix Photos/Profile Pictures/' + pic.name
-        await FileSystem.copyAsync({from : pic.uri , to : new_uri })
-        return new_uri
+       
       }
       
       insert_profile_to_database = (profile , certifications ,Billing_info ) => {
@@ -148,7 +155,7 @@ export class Screen_6_Preferences extends Component{
         <ScrollView style = {styles.container}>
             <View style = {{ top : 20 , alignItems : 'center' , height : ScreenHeight * 0.9 }}>   
             <View style = {{ justifyContent : 'space-around' , alignItems : 'center'  }}>
-                <Avatar rounded containerStyle = {{ backgroundColor: this.props.state.theme.icons_surrounding , elevation : 10 }} icon = {{ name : 'user-plus' , color : this.props.state.theme.icons , type : 'font-awesome' }} size = {'medium'} />
+                <Avatar rounded containerStyle = {{ backgroundColor: this.props.fun.Layout_Settings.Icons_surroundings , elevation : 10 }} icon = {{ name : 'user-plus' , color : this.props.fun.Layout_Settings.Icons_Color , type : 'font-awesome' }} size = {'medium'} />
                 <Text style = {styles.disclaimer}>STEP 6 OF 6</Text>
             </View>
             <View style = {styles.input_container} >
@@ -191,6 +198,14 @@ export class Screen_6_Preferences extends Component{
             
             
   </View>
+  <Spinner
+      visible={this.state.spin}
+      textContent={'Signing up on Multix Business...'}
+      textStyle={{
+        color : 'white',
+        fontSize : 16,
+      }}
+  />
   <View style = {{ position : 'relative' , bottom : -ScreenHeight*0.15  }}>
         <TouchableOpacity onPress = {
              () => {
@@ -198,23 +213,23 @@ export class Screen_6_Preferences extends Component{
 
                }else if (this.state.submitted == false){
                 this.props.send_info_certs(this.state.tags_Certs.tagsArray)
+                this.props.send_notification_token(this.props.fun.Fun_profile['Notifications_token'])
                 this.props.send_info_prefs(this.state.tags_Pref.tagsArray)
-                this.setState({submitted : true,Signing_up : true})
+                this.setState({submitted : true , spin : true})
                 setTimeout( ()=>{
                   try {
-                    const form_data = new FormData()
-                    form_data.append('Pic' , this.props.state.processed_image)
+                    
                     this.props.state.request_business_json({
                       method: 'post',
                       url: '/create_business_account',
-                      data: this.props.state.Business_sign_up,
+                      data: {...this.props.state.Business_sign_up },
                     }).then(async (response) =>{
                       if (response.status == 201){
                         const server_data = response.data['Account']
-                        const stored_pic = await this.storing_profile_pic_to_folder(this.props.state.processed_image)
+                        const stored_pic = await this.storing_profile_pic_to_folder(this.props.state.processed_image?(this.props.state.processed_image) : (null))
                         const database_data_account = [server_data.Multix_general_account_id,server_data.Multix_token,server_data.Name,server_data.Password,server_data.Contact,server_data.Email,
                           server_data.Description, server_data.Place_of_residence,server_data.Date_of_birth,server_data.Rating, server_data.Date_of_creation,
-                          server_data.Preference_1,server_data.Preference_2,server_data.Preference_3,server_data.Preference_4,stored_pic                        ]
+                          server_data.Preference_1,server_data.Preference_2,server_data.Preference_3,server_data.Preference_4,stored_pic ]
                         const certs = response.data['Certifications']
                         const Bills_info = response.data['Billing information']
                         const database_billis_info = [Bills_info.Card_Number , Bills_info.Name_on_card , Bills_info.CVC , Bills_info.Expiration_date]
@@ -222,27 +237,40 @@ export class Screen_6_Preferences extends Component{
                         //const business_db = new business_database()
                         //let profile = business_db.business_data()
                         const profile = {}
-                        profile['Account'] = response.data['Account']
+                        const account_info = response.data['Account']
+                        account_info['Profile_pic'] = this.props.state.processed_image.uri
+                        profile['Account'] = account_info
                         profile['Billing information'] = response.data['Billing information']
-                        profile['Cerifications'] = response.data['Certifications']
+                        profile['Certifications'] = response.data['Certifications']
                         profile['Transactions'] = []
                         profile['Contracts'] = []
                         profile['Languages'] = []
                         profile['Gigs'] =[]
                         this.props.store_profile_redux(profile)
-                        this.props.state.request_business_form({
-                          method : 'put',
-                          url : response.data['id']+'/profile_pic' ,
-                          data : form_data,
-                        }).then((response) => {
-                          if (response.status == 202){
-                            this.setState({created : true})
-                            setTimeout(() =>{
-                              this.setState({current_style : finished_sign_up})
-                            },1000)
-                            this.props.state.navigation.navigation.navigate('Business Profile')
-                          }
-                        })
+                        this.props.create_request_instances(response.data['Account']['Multix_token'])
+
+                        if (this.props.state.processed_image){
+                          const form_data = new FormData()
+                          form_data.append('Pic' , this.props.state.processed_image)
+                          this.props.state.request_business_form({
+                            method : 'put',
+                            url : response.data['id']+'/profile_pic' ,
+                            data : form_data,
+                          }).then((response) => {
+                            if (response.status == 202){
+                              this.setState({spin : false})
+                              //setTimeout(() =>{
+                                //this.setState({current_style : finished_sign_up})
+                              //},1000)
+                              this.props.state.navigation.navigation.navigate('Business Profile')
+                            }
+                          })  
+                        }else {
+                          //// No profile pic 
+                          this.setState({spin : false})
+                          this.props.state.navigation.navigation.navigate('Business Profile')
+                        }
+                       
                       }
                     })
                     
@@ -254,7 +282,7 @@ export class Screen_6_Preferences extends Component{
 
                }
               
-        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : this.props.state.theme.icons_surrounding, justifyContent : 'center' , alignItems : 'center'  }}>
+        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : this.props.fun.Layout_Settings.Icons_Color, justifyContent : 'center' , alignItems : 'center'  }}>
             <Text style = {{color : 'white'}}>Sign Up</Text>
         </TouchableOpacity>
 
@@ -327,12 +355,16 @@ export class Screen_6_Preferences extends Component{
    }
     
 }
-let mapStateToProps = (state) => {
-    return {state}
+let mapStateToProps = (state_redux) => {
+  let state = state_redux.business
+  let fun = state_redux.fun
+    return {state,fun}
 }
 
 let mapDispatchToProps = (dispatch) => ({
   send_info_certs : (Names) => dispatch({type : 'Certifications' , key : 'Certification_names' , value : Names }),
+  send_notification_token : (token) => dispatch({type : 'Business account' , key : 'Notifications_token' , value : token}),
+  create_request_instances : (token) => dispatch({ type : 'create_business_request_instances' , token : token }),
   send_info_prefs : (Names) => {
     for (let i = 0 ; i <= Names.length-1 ; i++){
       dispatch({type : 'Business account' , key : 'Preference_'+ (i+1) , value : Names[i]})

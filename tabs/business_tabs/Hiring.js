@@ -4,6 +4,7 @@ import {View , Text , TextInput , Image , Button , StyleSheet , TouchableOpacity
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { ScreenHeight, ScreenWidth } from 'react-native-elements/dist/helpers'
 import {connect} from 'react-redux'
+import * as Animatable from 'react-native-animatable'
 import {PulseLoader} from 'react-native-indicator'
 import NumberFormat from 'react-number-format'
 
@@ -11,71 +12,119 @@ export class Hiring extends Component {
     state = {
         IsReady : false,
         data : null, 
+        open : false
     }
     get_resources = () =>{
-        this.props.state.request_business_json({
-            method : 'GET',
-            url : 'fill_gigs/?Gig_type=Hiring' ,
-            data : {}
-        }).then((response)=>{
-            if (response.status === 202){
-                this.setState({IsReady : true , data : response.data})
-            }
-        })
+        if (this.props.state.Business_profile.Account){
+            this.props.state.request_business_json({
+                method : 'GET',
+                url : 'fill_gigs/?Gig_type=Hiring' ,
+                data : {}
+            }).then((response)=>{
+                //if (this.state.interval){
+                  //  this.state.interval.clearInterval(this.state.interval)
+                    //this.setState({interval : null})
+                //}
+                //this.setState({open : true})
+                if (response.status === 202){
+                    this.setState({IsReady : true , data : response.data})
+                }
+            }, ()=>{
+                //if (!this.state.interval){
+                  //  this.setState({interval : setInterval(()=>{
+                    //    this.get_resources()
+                    //},2000)
+                //})
+                //} 
+            })
+        }
+        
+    }
+    //persist = () => {
+      //  if (!this.state.open){
+        //    this.get_resources()
+          //  setTimeout(()=>{this.persist()},2000)
+        //}
+    //}
+    submit_hiring_proposal = (gig_id , account_id , gig_name , account_name) => {
+        if (this.props.state.Business_profile.Account){
+            this.props.state.request_business_json({
+                method : 'POST',
+                url : 'create_hiring_applicant' ,
+                data : {
+                    'gig_id' : gig_id,
+                    'Approved' : false,
+                }
+            }).then((response)=>{
+                if (response.status === 201){
+                    let data = {
+                        'type'  : 'Hiring',
+                        'account_id' : account_id,
+                        'gig' : gig_name,
+                        'Name' : account_name,
+                        notification : {
+                            'notifier_id' : response.data['Account_id_of_customer'],
+                            'Type' : 'Hiring',
+                            'Date' : response.data['Date'],
+                            'Type_id' : response.data['Hiring_id']
+                        } ,
+                        'contract_id' : response.data['contract_id']
+                    }
+                    this.props.state.ws_gig_notifications.sendMessage(data)
+                }
+            })
+        }
+
     }
     query_resources = (name)=>{
-        this.props.state.request_business_json({
-            method : 'GET',
-            url : 'fill_gigs/?Gig_type=Hiring&Gig_name=' + name ,
-            data : {}
-        }).then((response)=>{
-            if (response.status === 202){
-                this.setState({IsReady : true , data : response.data})
-            }
-        })
+        if (this.props.state.Business_profile.Account){
+            this.props.state.request_business_json({
+                method : 'GET',
+                url : 'fill_gigs/?Gig_type=Hiring&Gig_name=' + name ,
+                data : {}
+            }).then((response)=>{
+                if (response.status === 202){
+                    this.setState({IsReady : true , data : response.data})
+                }
+            })
+        }
+       
 
     }
     componentDidMount(){
-        this.get_resources()
+        if (this.props.state.Business_profile.Account){
+            this.get_resources()
+        }
+
     }
+    
     render = () => {
+        if (!this.props.state.Business_profile.Account){
+            return (
+        
+                <View style = {styles.container} >
+                <Image source = {require('.././../assets/giphy.gif')} style = {styles.bg} /> 
+                <View style = {{ position : 'absolute', paddingTop : ScreenHeight-800 }}>
+                    <Animatable.Text  style = {styles.welcoming_text}> We have what you are looking for.</Animatable.Text>
+                    <Animatable.Text style = {styles.welcoming_text} >Just accept and register with us</Animatable.Text>
+                    <Animatable.Text  style = {styles.welcoming_text}>You wont regret.</Animatable.Text>  
+                </View>
+                <View style = {{ paddingTop : ScreenHeight-500 , position : 'absolute' }}>
+                <Button title = {'Continue with us'} onPress = {
+                    ()=>{
+                        props.state.navigation.navigation.navigate("Welcome Information")
+                    }
+                }/>   
+                </View>      
+                </View>
+            )
+        }else {
             return (
                 <View style = {{
                     flex :1 ,
                 }}>
                     <View style = {styles.categorizer}>
-                        <View style = {{
-                            width : ScreenWidth,
-                            height : 40,
-                            flexDirection : 'row',
-                            justifyContent : 'space-around',
-                            alignItems : 'center'
-                        }}>
-                            <Text style = {{
-                                fontSize : 14.5,
-                                fontWeight : 'bold',
-                            }}>
-                                Sort By : 
-                            </Text>
-                            <TouchableOpacity style = {styles.chips}>
-                                <Text>
-                                    Recent
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style = {styles.chips}>
-                                <Text>
-                                    Top Rated
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style = {styles.chips}>
-                                <Text>
-                                    Online
-                                </Text>
-                            </TouchableOpacity>
-        
-        
-        
-                        </View>
+                      
                         <View>
                             <TextInput style = {{
                                 width : 0.8 * ScreenWidth,
@@ -185,11 +234,11 @@ export class Hiring extends Component {
                                              </Text>
                                          </View>
                                          <View style = {styles.rating}> 
-                                         <MaterialCommunityIcons name = "account-switch" color = {this.props.state.theme.icons_surrounding} size={26}/>
+                                         <MaterialCommunityIcons name = "account-switch" color = {this.props.fun.Layout_Settings.Icons_Color} size={26}/>
                                          <Text style = {{
                                              fontSize :20,
                                              fontWeight : 'bold',
-                                         }}> 12 </Text>
+                                         }}> { item.item.Count } </Text>
                                          </View>
                                          <Text >
                                              Date : {item.item.Gig_date_of_creation.slice(0,10)}
@@ -201,13 +250,22 @@ export class Hiring extends Component {
                                                          <Text > Salary :  {value} </Text>
                                                      )}
                                                      />
-                                         <TouchableOpacity style = {{...styles.propose , backgroundColor : this.props.state.theme.icons_surrounding}}>
-                                             <Text style = {{
-                                                 color : 'white',
-                                             }}>
-                                                 Apply
-                                             </Text>
-                                         </TouchableOpacity>    
+                                            {
+                                                item.item.Account_id == this.props.state.Business_profile.Account.user_id ? (
+                                                    (null)
+                                                ) : (
+                                                    <TouchableOpacity onPress = {()=>{
+                                                        this.submit_hiring_proposal(item.item.Gig_id,item.item.Account_id,item.item.Gig_name,item.item.Name)
+                                                    }} style = {{...styles.propose , backgroundColor : this.props.fun.Layout_Settings.Icons_Color}}>
+                                                        <Text style = {{
+                                                            color : 'white',
+                                                        }}>
+                                                            Apply
+                                                        </Text>
+                                                    </TouchableOpacity>    
+                                                )
+                                            }
+                                        
                                      </View>
                                  </TouchableOpacity>
                              )
@@ -231,21 +289,25 @@ export class Hiring extends Component {
                         }
                     }>
                         <Avatar containerStyle = {{
-                            backgroundColor : this.props.state.theme.icons_surrounding,
+                            backgroundColor : this.props.fun.Layout_Settings.Icons_Color,
                         }} icon = {{ name : 'add' , type : 'MaterialCommunityIcons', color : 'white' , size : 18 }} size = {'medium'} rounded/>
                     </TouchableOpacity>
         
                     
                 </View>
             )
+        }
+            
 
         }
        
 
     }
     
-let mapStateToProps = (state) => {
-    return {state}
+let mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state,fun}
 
 }
 
@@ -256,9 +318,26 @@ let mapDispatchToProps = (dispatch) => ({
 export default connect(mapStateToProps , mapDispatchToProps)(Hiring)
 
 const styles = StyleSheet.create({
+    container : {
+        flex : 1,
+        justifyContent : 'center',
+        alignItems : 'center'
+
+
+    },
+    welcoming_text : {
+        fontSize : 18,
+        fontWeight : '700',
+        color : 'black',
+
+    },
+    bg : {
+        opacity : 0.5,
+        flex : 1
+    },
     categorizer : {
         width : ScreenWidth,
-        height : 0.23 * ScreenWidth,
+        height : 0.15 * ScreenWidth,
         elevation : 10,
         backgroundColor : 'white',
         flexDirection : 'column',

@@ -1,5 +1,5 @@
 import React , {Component} from 'react'
-import { View , StyleSheet , Text , TouchableOpacity } from 'react-native'
+import { View , StyleSheet , Text , TouchableOpacity,ScrollView } from 'react-native'
 import { Avatar } from 'react-native-elements'
 import { ScreenHeight, ScreenWidth } from 'react-native-elements/dist/helpers'
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome'
@@ -18,11 +18,14 @@ export class Screen_4_Billing extends Component  {
     }
     render = () =>{
         return (
+            <ScrollView style = {{ flex : 1 }}>
             <View style = {styles.container}>
                 <View style = {{ top : 20 , alignItems : 'center' }}>   
-                <View style = {{ justifyContent : 'space-around' , alignItems : 'center'  }}>
-                    <Avatar rounded containerStyle = {{ backgroundColor: this.props.state.theme.icons_surrounding , elevation : 10 }} icon = {{ name : 'credit-card-alt' , color : this.props.state.theme.icons , type : 'font-awesome' }} size = {'medium'} />
+                <View style = {{ justifyContent : 'space-around' , alignItems : 'center' , flexWrap : 'nowrap'  }}>
+                    <Avatar rounded containerStyle = {{ backgroundColor: this.props.fun.Layout_Settings.Icons_surroundings , elevation : 10 }} icon = {{ name : 'credit-card-alt' , color : this.props.fun.Layout_Settings.Icons_Color , type : 'font-awesome' }} size = {'medium'} />
                     <Text style = {styles.disclaimer}>BILLING INFORMATION</Text>
+                    <Text style = {{ fontSize : 9, color : 'red' }}> This feature is still under maintainance by the Multix engineers and not yet stable. Press 'Skip' </Text>
+
                 </View>
                 <View style = {styles.input_container} >
                 <CreditCardInput autofocus
@@ -33,45 +36,52 @@ export class Screen_4_Billing extends Component  {
       <View style = {{ position : 'relative' , bottom : -20 }}>
             <TouchableOpacity onPress = {
                 () => {
-                    this.props.send_info_Name(this.state.form_data.values.type)
-                    this.props.send_info_Number(this.state.form_data.values.number)
-                    this.props.send_info_expiry(this.state.form_data.values.expiry)
-                    this.props.send_info_cvc(this.state.form_data.values.cvc)
+                    this.props.send_info_Name('Multix Express')
+                    this.props.send_info_Number('000')
+                    this.props.send_info_expiry('2021-05-05')
+                    this.props.send_info_cvc('')
                     this.props.state.navigation.navigation.navigate('Profile Picture')
                 }
-            } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : this.props.state.theme.icons_surrounding, justifyContent : 'center' , alignItems : 'center'  }}>
+            } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : this.props.fun.Layout_Settings.Icons_Color, justifyContent : 'center' , alignItems : 'center'  }}>
                 <Text style = {{color : 'white'}}>Next</Text>
             </TouchableOpacity>
     
       </View>
-      <View style = {{ position : 'relative' , top : 40  }}>
+      <View style = {{ position : 'relative' , top : -70,  }}>
             <TouchableOpacity onPress = {
                 () => {
+                    this.props.send_info_Name('Multix Express')
+                    this.props.send_info_Number('000')
+                    this.props.send_info_expiry('2021-05-05')
+                    this.props.send_info_cvc('')
                     this.props.state.navigation.navigation.navigate('Profile Picture')
                 }
-            } style = {{ width : 180 , elevation : 20, height : 42 , borderRadius :21  , backgroundColor : this.props.state.theme.icons_surrounding, justifyContent : 'center' , alignItems : 'center'  }}>
+            } style = {{ width : 180 , elevation : 20, height : 42 , borderRadius :21  , backgroundColor : this.props.fun.Layout_Settings.Icons_Color, justifyContent : 'center' , alignItems : 'center'  }}>
                 <Text style = {{color : 'white'}}>Skip for now</Text>
             </TouchableOpacity>
       </View>
       </View>
     
             </View>
+            </ScrollView>
         )
     }
     
 }
-let mapStateToProps = (state) => {
-    return {state}
+let mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state,fun}
 }
 
 let mapDispatchToProps = (dispatch) => ({
     send_info_Name : (Name) => dispatch({type : 'Billing information' , key : 'Name_on_card' , value : Name}),
     send_info_Number : (Number) => dispatch({type : 'Billing information' , key : 'Card_Number' , value : Number }),
     send_info_expiry : (Expiry) =>{ 
-        let split_date = Expiry.split("/")
-        let final_date = "20" + split_date[1] + "-" + split_date[0] + "-" + "01" 
-        console.log(final_date)
-        dispatch({type : 'Billing information' , key : 'Expiration_date' , value : final_date })},
+        //let split_date = Expiry.split("/")
+        //let final_date = "20" + split_date[1] + "-" + split_date[0] + "-" + "01" 
+        //console.log(final_date)
+        dispatch({type : 'Billing information' , key : 'Expiration_date' , value : Expiry })},
     send_info_cvc : (cvc) => dispatch({type : 'Billing information' , key : 'CVC' , value : cvc }),
 
 })
@@ -94,7 +104,7 @@ const styles = StyleSheet.create({
         flexDirection : 'column',
         justifyContent : 'space-around',
         alignItems : 'center',
-        height : 300,
+        height : 0.55 * ScreenHeight,
         width : ScreenWidth ,
         elevation : 10
 

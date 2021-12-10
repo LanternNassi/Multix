@@ -1,19 +1,33 @@
 import React , {Component} from 'react'
-import {Text , View, StyleSheet ,TextInput, TouchableOpacity , FlatList,TouchableNativeFeedback } from 'react-native';
+import {Text , View, StyleSheet ,TextInput, TouchableOpacity , FlatList,TouchableNativeFeedback,Share } from 'react-native';
 import { Avatar,SpeedDial,Badge } from 'react-native-elements'
 import { ScreenWidth, ScreenHeight } from 'react-native-elements/dist/helpers';
 import Theme from './../constants/Theme.js'
 import {connect} from 'react-redux';
 import Message from './Message.js';
+import Reply_Message from './Reply_Message.js';
 import { FAB,Portal,Provider } from 'react-native-paper';
-import * as Animatable from 'react-native-animatable'
 import { Camera  } from 'expo-camera';
 import Camera_Screen from '../hardware/Camera.js'
 import { Audio } from 'expo-av';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
+import Chat from '../websockets/Chat_notifications.js'
+import fun_database from '../redux/Database_fun_transactions.js'
+import * as Animatable from 'react-native-animatable';
+import axios from 'axios'
+import FormData, {getHeaders} from 'form-data'
+import * as mime from 'react-native-mime-types'
+import * as Sharing from 'expo-sharing'
 
+
+
+import Picture from './Media_components/Picture.js'
+import Video_comp from './Media_components/Video.js'
+//import Audio_clip from './Media_components/Audio.js'
+import Pdf from './Media_components/Pdf.js'
+ 
 const spread_out = {
     0 : {
         
@@ -30,6 +44,8 @@ const spread_out = {
     },
 },
 
+
+
  jump_up_timer = {
     0 : {
         left : 0.88*ScreenWidth ,
@@ -38,10 +54,58 @@ const spread_out = {
     },
     0.5 : {
         left : 0.88*ScreenWidth ,
-        bottom : 0.5*ScreenHeight
-       
+        bottom : 0.5*ScreenHeight,
     }
 },
+
+
+
+reply_message = {
+    0 : {
+        bottom : 0,
+        height : 0,
+        width : ScreenWidth,
+        backgroundColor : 'rgba(0,0,0,0.6)'
+
+    },
+    0.5 : {
+        bottom : 0,
+        height : 0.09 * ScreenHeight,
+        width : ScreenWidth,
+        backgroundColor : 'rgba(0,0,0,0.6)'
+
+    },
+    1 : {
+        bottom : 0,
+        height : 0.2 * ScreenHeight,    
+        width : ScreenWidth,
+        backgroundColor : 'rgba(0,0,0,0.8)'
+    }
+}
+
+
+after_reply_message = {
+    0 : {
+        bottom : 0,
+        height : 0.2 * ScreenHeight,
+        width : ScreenWidth,
+        backgroundColor : 'rgba(0,0,0,0.8)'
+    },
+    0.5 : {
+        bottom : 0,
+        height : 0.09 * ScreenHeight,
+        width : ScreenWidth,
+        backgroundColor : 'rgba(0,0,0,0.6)'
+
+    },
+    1 : {
+        bottom : 0,
+        height : 0,
+        width : ScreenWidth,
+        backgroundColor : 'rgba(0,0,0,0.6)'
+
+    },
+}
 
  spread_out_camera = {
     0 : {
@@ -62,8 +126,8 @@ class Chats_screen extends Component {
     }
     times = 0
     cam = null;
-    
-     
+    video_resource = null
+    message = null
     messo_flatlist = null;
     state= {
         
@@ -82,233 +146,477 @@ class Chats_screen extends Component {
         time_recorded : 0,
         files_picked : null,
         image : null,
+        reply : false,
+        reply_animation : true,
+        //curent_date : 0,
+
+        //cam : null
+        //current_index : 0,
         
     }
     
     
 
-    video_starter_or_stopper_recorder = async ( action ) => {
-        const {status} = await Camera.requestPermissionsAsync()
-        const audio_perms = await Audio.requestPermissionsAsync()
+    
 
-        
-        if (status==="granted" && action === "Start" && audio_perms.status === "granted" ){
+    store_to_redux = async (file) => {
+        if (this.state.current_index === 0 || this.state.current_index){
+            this.props.send_message( this.state.current_index ,  {
+                'id' : 'Not saved',
+                'Contact' : this.state.Contact,
+                'Message' : file,
+                'Receiving' : false,
+                'Date' : new Date().toString(),
+                'Status' : 'Not sent',
+                'Server_id' : this.props.route.params['Server_id'],
+                'Type' : mime.lookup(file).split('/')[0],
+            });
+            this.props.update_chat_position(this.props.route.params['Server_id'])
             
-            this.setState({video_height: ScreenHeight , video_width : ScreenWidth , camera_video_active : true , Are_permissions_granted : true});
-            setTimeout(async ( ) => {
-                try {
-                    let video = await this.cam.recordAsync()
-                    console.log(video.uri)
-                } catch(e){
-                    console.log(e)
-                }
-                
- 
-
-        },1 )
-
-
-        } else if ( status === "granted" && action === "Stop" && this.cam ){
-            this.cam.stopRecording()
-            this.setState({video_height: 0 , video_width : 0 , camera_video_active : false});
-        }
-        
-        
-    }
-
-    audio_starter_or_stopper_recorder = async (action) =>{
-        const audio_perms = await Audio.requestPermissionsAsync()
-        //const recording = new Audio.Recording();
-        if ( action === "Start" && audio_perms.status === "granted" ){
-            try {
-                this.state.recording.setOnRecordingStatusUpdate((audio_status)=>{
-
-                    this.setState({time_recorded : (audio_status.durationMillis/1000).toFixed(0)})
-                    
-                })
-                this.state.recording.setProgressUpdateInterval(1000)
-                await this.state.recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
-                await this.state.recording.startAsync();
-                console.log("Starting to record ....")
-            // You are now recording!
-            } catch (error) {
-            // An error occurred!
-            }
-
-        } else if (action === "Stop" ) {
-            try {
-                const audio = await this.state.recording.stopAndUnloadAsync()
-                console.log(this.state.recording.getURI())
-                console.log("Stopping to record ....")
-                
-            } catch (error) {
-                
-                
-            }
-            
-        }
-        
-    }
-
-    video_accessor = (icon) => {
-        this.times += 1;
-        if (this.times < 2) {
-            setTimeout( ()=>{
-                if(this.times >= 2 ){
-                    (icon == "microphone")? 
-                    this.setState({ video_audio_action_icon : 'video-camera', video : true }) : this.setState({ video_audio_action_icon : 'microphone', video : false })
-                } else {
-                    this.times -= this.times;
-
-                }
-            } , 1000  )
-    
         } else {
-            (icon == "microphone")? 
-            this.setState({ video_audio_action_icon : 'video-camera', video : true }) : this.setState({ video_audio_action_icon : 'microphone', video : false })
-            this.times -= this.times;
+            let info = {
+                'Server_id' : this.props.route.params['Server_id'],
+                'Name' : this.props.route.params['Name'],
+                'Contact_name' : '@unknown',
+                'Messages' : [
+                    { 
+                        'id' : 'Not saved',
+                        'Contact' : this.state.Contact,
+                        'Message' : file,
+                        'Receiving' : false,
+                        'Date' : new Date().toString(),
+                        'Status' : 'Not sent',
+                        'Server_id' :this.props.route.params['Server_id'],
+                        'Type' : mime.lookup(file).split('/')[0]
+                    }
+                ]
+            }
+            let index = this.props.state.fun.Messages.length
+            this.setState({current_index : index })
+            this.props.send_message_new(info)
+            this.props.create_new_chat_position({
+                'Server_id' : this.props.route.params['Server_id'],
+                'Index' : (index),
+            })
         }
-        
+       
     }
+
+  
+
+    Receiver_id = (Name) => {
+        for(let i=0; i<(this.props.state.fun.Contacts).length; i++){
+            if ( Name === this.props.state.fun.Contacts[i].Name){
+                if (this.props.state.fun.Contacts.Server_id){
+                    return this.props.state.fun.Contacts[i].Server_id
+                } else {
+                    return this.props.state.fun.Contacts[i].id
+                }
+            }
+        }
+    }
+
+    contact = (Server_id) => {
+        if ( this.props.state.fun.Contacts[0].Server_id){
+            for(let i = 0; i < this.props.state.fun.Contacts.length; i++){
+                if (Server_id === this.props.state.fun.Contacts[i].Server_id){
+                    return this.props.state.fun.Contacts[i].Contact
+                }
+            }
+        } else {
+            for(let i = 0; i < this.props.state.fun.Contacts.length; i++){
+                if (Server_id === this.props.state.fun.Contacts[i].id){
+                    return this.props.state.fun.Contacts[i].Contact
+                }
+            }
+
+        }
+    }
+    current_date = 0;
    
+    componentDidMount = ()=>{
+        const {Index} = this.props.route.params ;
+        const Contact = this.contact(this.props.route.params['Server_id'])
+        this.setState({current_index : Index , Contact : Contact})
+    }
 
     render = () =>{
-    const {name , id } = this.props.route.params ;
-    const current_chat = this.props.state.current_chat ;
-    
-    
-   
+        const {Name , Index , Server_id} = this.props.route.params ;
+        //console.log(Name)
+        const receiver_id = this.Receiver_id(Name)
     return (
         
         <View style = {styles.container}>
             <View  style = {{ height : 500  }}>
-           <FlatList s
+           <FlatList 
+            keyExtractor = { (item,index)=>index.toString()}
             ref = { ref => {
                 this.messo_flatlist = ref
             }  }
-            
             inverted = {true}
-            data = {this.props.state.messages[current_chat]}
+            data = { this.state.current_index === 0 || this.state.current_index ? this.props.state.fun.Messages[this.state.current_index].Messages : [] }
             horizontal = {false}
             renderItem = { 
-                (item) =>  (
-                    <TouchableOpacity style = {{ paddingTop : 10 , paddingBottom : 10 , }} onLongPress = {
-                        ()=> {
-                            this.setState({message_action : true})
-                        }
-                    } >
-                    <Message messo = {item.item.message} type = {item.item.type}/>
-                    </TouchableOpacity>
-                
-                )
+                (item,index) => {
+                    //let previous_date = this.current_date
+                    let previous_item = (item.index) > 0 ? (item.index-1) : (item.index)
+                    let number = this.props.state.fun.Messages[this.state.current_index].Messages.length
+                    let previous_date = this.props.state.fun.Messages[this.state.current_index].Messages[previous_item]['Date']
+                    if (item.item.Type == 'text'){
+                        //console.log(previous_date)
+                       
+                        return  (
+                            <View style = {{
+                                width : ScreenWidth,
+                                alignItems : 'center'
+                            }}>
+                                 {
+                                   ((item.index === (number-1) )) ? (
+                                       <View style = {{
+                                    
+                                        //width : 0.3 * ScreenWidth,
+                                        alignItems : 'center',
+                                        justifyContent : 'center',
+                                        border : 0.5,
+                                        backgroundColor : 'black',
+                                        elevation : 10,
+                                        borderRadius : 8
+                                       }} >       
+                                           <Text style = {{ color : 'white',fontWeight : 'bold' }} > { previous_date.slice(0,15) } </Text>
+                                       </View>
+                                       ) : (
+                                       <View/>
+                                   )
+                               }
+                            <TouchableOpacity style = {{ paddingTop : 10 ,
+                                 paddingBottom : 10 ,
+                                 alignItems : item.item.Receiving ? 'flex-start' : 'flex-end' , 
+                                 width : 0.98 * ScreenWidth  }} onLongPress = {
+                                ()=> {
+                                    this.setState({selected_message : {
+                                        Index : item.index,
+                                        Message : item.item
+                                    },message_action : true})
+                                }
+                            } >
+                                {
+                                    (item.item.Reply == null) ? (
+                                        <Message 
+                                            messo = {item.item.Message} 
+                                            type = {item.item.Receiving}
+                                            date = {item.item.Date.slice(16,24) }
+                                            />
+                                    ) : (
+                                        <Reply_Message 
+                                            messo = {item.item.Message} 
+                                            type = {item.item.Receiving} 
+                                            replied = { item.item.Replied }
+                                            date = { item.item.Date.slice(16,24)}
+                                            />
+                                    )
+                                }
+                            </TouchableOpacity>
+                            {
+                                   (previous_date.slice(8,10) != item.item.Date.slice(8,10) ) ? (
+                                       <View style = {{
+                                    
+                                        //width : 0.3 * ScreenWidth,
+                                        alignItems : 'center',
+                                        justifyContent : 'center',
+                                        border : 0.5,
+                                        backgroundColor : 'black',
+                                        elevation : 10,
+                                        borderRadius : 8
+                                       }} >       
+                                           <Text style = {{ color : 'white',fontWeight : 'bold' }} > { previous_date.slice(0,15) } </Text>
+                                       </View>
+                                       ) : (
+                                       <View/>
+                                   )
+                               }
+                        </View>
+                        )
+                    } else if (item.item.Type == 'image'){
+                        return (
+                            <View style = {{
+                                width : ScreenWidth,
+                                alignItems : 'center'
+                            }}>
+                             
+                             {
+                                   ((item.index === (number-1) )) ? (
+                                       <View style = {{
+                                    
+                                        //width : 0.3 * ScreenWidth,
+                                        alignItems : 'center',
+                                        justifyContent : 'center',
+                                        border : 0.5,
+                                        backgroundColor : 'black',
+                                        elevation : 10,
+                                        borderRadius : 8
+                                       }} >       
+                                           <Text style = {{ color : 'white',fontWeight : 'bold' }} > { previous_date.slice(0,15) } </Text>
+                                       </View>
+                                       ) : (
+                                       <View/>
+                                   )
+                               }
+                            <TouchableOpacity style = {{ paddingTop : 10 ,
+                                 paddingBottom : 10 ,
+                                 alignItems : item.item.Receiving ? 'flex-start' : 'flex-end' , 
+                                 width : 0.98 * ScreenWidth  }} onLongPress = {
+                                ()=> {
+                                    this.setState({selected_message : {
+                                        Index : item.index,
+                                        Message : item.item
+                                    },message_action : true})
+                                }
+                            } >
+                            <Picture 
+                                image_uri = {item.item.Message}
+                                info = {{
+                                    'To' : Server_id,
+                                    'forwarded' : false,
+                                    'Reply' : false
+                                }}
+                                Contact = {
+                                    this.state.Contact
+                                }
+                                Server_id = {Server_id}
+                                Status = { item.item.Status }
+                                date = {item.item.Date.slice(16,24) }
+                                Index = {Index}
+                                message_index = {item.index}
+                             />
+                            </TouchableOpacity>
+                            {
+                                   (previous_date.slice(8,10) != item.item.Date.slice(8,10)) ? (
+                                       <View style = {{
+                                    
+                                        //width : 0.3 * ScreenWidth,
+                                        alignItems : 'center',
+                                        justifyContent : 'center',
+                                        border : 0.5,
+                                        backgroundColor : 'black',
+                                        elevation : 10,
+                                        borderRadius : 8
+                                       }} >       
+                                           <Text style = {{ color : 'white',fontWeight : 'bold' }} > { previous_date.slice(0,15) } </Text>
+                                       </View>
+                                       ) : (
+                                       <View/>
+                                   )
+                               }
+                            </View>
+                        )
+                    } else if (item.item.Type == 'video'){  
+                                  
+                        return (
+                            <View style = {{
+                                width : ScreenWidth,
+                                alignItems : 'center'
+                            }}>
+                                {
+                                   ((item.index === (number-1) )) ? (
+                                       <View style = {{
+                                    
+                                        //width : 0.3 * ScreenWidth,
+                                        alignItems : 'center',
+                                        justifyContent : 'center',
+                                        border : 0.5,
+                                        backgroundColor : 'black',
+                                        elevation : 10,
+                                        borderRadius : 8
+                                       }} >       
+                                           <Text style = {{ color : 'white',fontWeight : 'bold' }} > { previous_date.slice(0,15) } </Text>
+                                       </View>
+                                       ) : (
+                                       <View/>
+                                   )
+                               }
+                                
+                            <TouchableOpacity style = {{ paddingTop : 10 ,
+                                 paddingBottom : 10 ,
+                                 alignItems : item.item.Receiving ? 'flex-start' : 'flex-end' , 
+                                 width : 0.98 * ScreenWidth  }} onLongPress = {
+                                ()=> {
+                                    this.setState({selected_message : {
+                                        Index : item.index,
+                                        Message : item.item
+                                    },message_action : true})
+                                }
+                            } >
+                            <Video_comp 
+                                video_uri = {item.item.Message }
+                                info = {{
+                                    'To' : Server_id,
+                                    'forwarded' : false,
+                                    'Reply' : false
+                                }}
+                                Contact = {
+                                    this.state.Contact
+                                }
+                                Server_id = {Server_id}
+                                Status = { item.item.Status }
+                                date = {item.item.Date.slice(16,24) }
+                                Index = {this.state.current_index}
+                                message_index = {item.index}
+                              />
+                            </TouchableOpacity>
+                            {
+                                   (previous_date.slice(8,10) != item.item.Date.slice(8,10)) ? (
+                                       <View style = {{
+                                    
+                                        //width : 0.3 * ScreenWidth,
+                                        alignItems : 'center',
+                                        justifyContent : 'center',
+                                        border : 0.5,
+                                        backgroundColor : 'black',
+                                        elevation : 10,
+                                        borderRadius : 8
+                                       }} >       
+                                           <Text style = {{ color : 'white',fontWeight : 'bold' }} > { previous_date.slice(0,15) } </Text>
+                                       </View>
+                                       ) : (
+                                       <View/>
+                                   )
+                               }
+                            </View>
+                        )
+                    } else if (item.item.Type == 'application'){
+                        return (
+                            <View style = {{
+                                width : ScreenWidth,
+                                alignItems : 'center'
+                            }}>
+                               
+                            <TouchableOpacity style = {{ paddingTop : 10 ,
+                                 paddingBottom : 10 ,
+                                 alignItems : item.item.Receiving ? 'flex-start' : 'flex-end' , 
+                                 width : 0.98 * ScreenWidth  }} onLongPress = {
+                                ()=> {
+                                    this.setState({selected_message : {
+                                        Index : item.index,
+                                        Message : item.item
+                                    },message_action : true})
+                                }
+                            } >
+                            <Pdf file = {item.item.Message} />
+                            </TouchableOpacity>
+                            </View>
+                        )
+                    } 
+                  
+            }
                 
             }
             />
             </View>
             
-            { this.state.camera_video_active && this.state.Are_permissions_granted  ? (
-                
-                 <View style = {{  position : 'absolute', height : this.state.video_height , width : this.state.video_width , backgroundColor : 'rgba(0,0,0,0.6)'  }}>
-                        <Animatable.View animation = {spread_out_camera} style = {{  position : 'absolute', bottom : 0.5 * ScreenHeight-90 , right : 0.5*ScreenWidth-90 ,  }}>
-                        <Camera style={styles.camera} type={Camera.Constants.Type.front} 
-                                
-                                    flashMode = {Camera.Constants.FlashMode.off}
-                                    ref = { ref => {
-                                    this.cam = ref;
-                                    } }
-                                >
-                                    
-                            
-                                </Camera>
-
-                 </Animatable.View>
-                     
-                 </View>
-            ) : console.log()  }
+           
             {  this.state.message_action ? (
                 <Animatable.View animation = {spread_out}
                      style = {{  position : 'absolute', height : ScreenHeight , width : ScreenWidth , backgroundColor : 'rgba(0,0,0,0.6)'  }}>
                     <View style = {{
                         position : 'absolute',
-                         bottom : 0.5 * ScreenHeight-90 ,
-                          right : 0.4*ScreenWidth-90 ,
-                        height : 50,
-                        width : 240,
+                        bottom : 0.5 * ScreenHeight-90 ,
+                        right : 0.05*ScreenWidth ,
+                          
+                        height : 75,
+                        width : 0.9 * ScreenWidth,
                         backgroundColor : 'transparent',
                         flexDirection : 'row',
                         justifyContent : 'space-between',
                         alignItems : "center",
                     }} >
-                        <Animatable.View animation = {"slideInDown"} direction = {"alternate"} iterationCount = {1} >
-                            <TouchableOpacity>
-                                <Avatar rounded containerStyle = {{ backgroundColor : 'white' }} size = {'medium'} icon = {{ name : 'trash' , color : this.props.state.theme.icons_surrounding , type : 'font-awesome' }}/>
-                            </TouchableOpacity>
-                        </Animatable.View>
-                        <Animatable.View animation = {"slideInDown"} direction = {"alternate"} iterationCount = {1} >
-                        <TouchableOpacity>
-                            <Avatar rounded containerStyle = {{ backgroundColor : 'white' }} size = {'medium'} icon = {{ name : 'star' , color : this.props.state.theme.icons_surrounding , type : 'font-awesome' }}/>
+                        <Animatable.View animation = {"slideInDown"} direction = {"alternate"} iterationCount = {1} style = {{
+                            height : 75,
+                            justifyContent : 'space-between'
+                        }} >
+                        <TouchableOpacity onPress = {
+                            async ()=>{
+                                this.props.delete_message( this.state.current_index,this.state.selected_message.Index )
+                                this.setState({message_action : false})
+                                await fun_database.delete_message_db(this.state.selected_message.Message.id)
+                            }
+                        }  >
+                            <Avatar rounded  containerStyle = {{ backgroundColor : this.props.state.fun.Layout_Settings.Icons_surroundings }} size = {'medium'} icon = {{ name : 'trash' , color : this.props.state.fun.Layout_Settings.Icons_Color , type : 'font-awesome' }}/>
                         </TouchableOpacity>
+                        <Text style = {{ color : 'white' }}> Delete </Text>
                         </Animatable.View>
-                        <Animatable.View animation = {"slideInDown"} direction = {"alternate"} iterationCount = {1} >
-                        <TouchableOpacity>
-                            <Avatar rounded containerStyle = {{ backgroundColor : 'white' }} size = {'medium'} icon = {{ name : 'reply' , color : this.props.state.theme.icons_surrounding , type : 'font-awesome' }}/>
+                        <Animatable.View animation = {"slideInDown"} direction = {"alternate"} iterationCount = {1} style = {{
+                             height : 75,
+                             justifyContent : 'space-between',
+                             alignItems : 'center'
+                        }} >
+                        <TouchableOpacity onPress = {
+                            async ()=>{
+                                await fun_database.star_message_db(this.state.selected_message.Message.id)
+                            }
+                        } >
+                            <Avatar rounded containerStyle = {{ backgroundColor : this.props.state.fun.Layout_Settings.Icons_surroundings }} size = {'medium'} icon = {{ name : 'star' , color : this.props.state.fun.Layout_Settings.Icons_Color , type : 'font-awesome' }}/>
                         </TouchableOpacity>
+                        <Text style = {{ color : 'white' }}> Star </Text>
                         </Animatable.View>
+                        <Animatable.View animation = {"slideInDown"} direction = {"alternate"} iterationCount = {1} style = {{
+                             height : 75,
+                             justifyContent : 'space-between'
+                        }} >
+                        <TouchableOpacity onPress = {
+                            
+                                //this.props.state.business.navigation.navigation.navigate('Add chats to conversation')
+                                async () => {
+                                    const options = {
+                                        message : this.state.selected_message.Message.Message,
+                                      };
+                                    let sharing_possible = await Sharing.isAvailableAsync()
+                                    if (sharing_possible){
+                                        try {
+                                            const result = await Share.share(options);
+                                              if (result.action === Share.sharedAction) {
+                                                if (result.activityType) {
+                                                    console.log(result.activityType)
+                                                  // shared with activity type of result.activityType
+                                                } else {
+                                                  // shared
+                                                }
+                                              } else if (result.action === Share.dismissedAction) {
+                                                  console.log('shared')
+                                                // dismissed
+                                              }
+                                        } catch (error) {
+                                            console.log(error)
+                                        }
+                                    }
+                                }
+                            
+                        } >
+                            <Avatar rounded containerStyle = {{ backgroundColor : this.props.state.fun.Layout_Settings.Icons_surroundings }} size = {'medium'} icon = {{ name : 'share-alt' , color : this.props.state.fun.Layout_Settings.Icons_Color , type : 'font-awesome' }}/>
+                        </TouchableOpacity>
+                        <Text style = {{ color : 'white' }}> Share </Text>
+                        </Animatable.View>
+
+                      
                     </View>
 
                 </Animatable.View>
 
             ) : ( <View/> )  }
-               <Animatable.View animation = {"slideInDown"} direction = {"alternate"} iterationCount = {'infinite'}  style = {{position : 'absolute' ,height : 50 , width : 50 , left : 0.88*ScreenWidth , bottom : 0.1*ScreenHeight }}  >
-                   <Badge value = {this.state.time_recorded} status = {'warning'} />
-               </Animatable.View>
-                <TouchableOpacity style = {{ position : 'absolute', bottom : 70 , right : 20 ,  }}
-                onPressOut = { ()=>{
-                    this.state.camera_video_active ? 
-                    this.video_starter_or_stopper_recorder("Stop") : this.audio_starter_or_stopper_recorder("Stop"); setTimeout(()=>{
-                        this.setState({recording : new Audio.Recording(),time_recorded : 0}); 
-                    },500) 
-
-                }}
-                    onLongPress= { ()=> {
-                        this.state.video_audio_action_icon == "video-camera" ? this.video_starter_or_stopper_recorder("Start")
-                         : this.audio_starter_or_stopper_recorder("Start");  }}
-                           
-                    onPress = { ()=> this.video_accessor( this.state.video_audio_action_icon ) }
-                 >
-                    <Avatar rounded size ={"medium"} icon = {{ name : this.state.video_audio_action_icon ,type : 'font-awesome', color : 'white' }} containerStyle = {{backgroundColor : this.props.state.theme.icons_surrounding,elevation : 5 }}/>
-                </TouchableOpacity>
+             
 
                 <Portal>
                 <FAB.Group
-                    fabStyle  = {{ backgroundColor : this.props.state.theme.icons_surrounding,paddingLeft:4 }}
+                    fabStyle  = {{ backgroundColor : this.props.state.fun.Layout_Settings.Icons_surroundings,paddingLeft:4 }}
                     visible = {false}
-                    color = {this.props.state.theme.icons}
+                    color = {this.props.state.fun.Layout_Settings.Icons_Color}
                     style = {{ bottom : 50 , }}
                     onPress = { ()=> this.state.open ? this.setState({open : false}) : this.setState({open : true})  }
                     open = {this.state.open}
                 
-                    icon = { this.state.open ? 'video-camera' : 'microphone'  }
+                    icon = { this.state.open ? 'video-camera' : 'microphone'}
                     
                     actions = {[
-                        {icon : 'plus', accessibilityLabel : 'add', label : 'Add friend to conversation', onPress : ()=> {
-                            this.props.state.navigation.navigation.navigate("Add chats to conversation")
-                        } , style : {backgroundColor : this.props.state.theme.icons_surrounding, height : 40 , width : 40 },   color : this.props.state.theme.icons  },
-                        {icon : 'bell' , label : 'mute' , onPress : ()=>console.log("pressed") , style : {backgroundColor : this.props.state.theme.icons_surrounding, height : 40 , width : 40 },   color : this.props.state.theme.icons  },
-                        {icon : 'file' , label : 'Send a document' , onPress : async ()=>{
-                            try {
-                                
-                                await DocumentPicker.getDocumentAsync({type : '*/*', multiple : true}).then(file =>{
-                                    console.log(file);
-                                })
-                            
-                            }catch(e){
-
-                            }
-                            
-                            //this.setState({files_picked : files})
-                            
-                        },  style : {backgroundColor : this.props.state.theme.icons_surrounding, height : 40 , width : 40 },   color : this.props.state.theme.icons  },
+                        
                         {icon : 'video-camera' , label : 'Send video' ,  onPress : async ()=>{
                             const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
                             if (status === "granted"){
@@ -321,17 +629,20 @@ class Chats_screen extends Component {
                                 });
                                 if (!result.cancelled) {
                                   this.setState({ image: result.uri });
+                                  await this.store_to_redux(result.uri)
+                                  
                                 }
                           
-                                console.log(result);
+                                //console.log(result);
                               } catch (E) {
                                 console.log(E);
                               }} else {
-                                  console.log("No permissions")
+                                  alert("No permissions")
                               }
                             
 
-                        } , style : {backgroundColor : this.props.state.theme.icons_surrounding, height : 40 , width : 40   },   color : this.props.state.theme.icons  },
+                        } , style : {backgroundColor : this.props.state.fun.Layout_Settings.Icons_surroundings, height : 40 , width : 40   },   color : this.props.state.fun.Layout_Settings.Icons_Color  },
+                        
                         {icon : 'image' , label : 'Send an image' ,  onPress : async ()=>{
                             const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
                             if (status === "granted"){
@@ -339,57 +650,134 @@ class Chats_screen extends Component {
                                 let result = await ImagePicker.launchImageLibraryAsync({
                                   mediaTypes: ImagePicker.MediaTypeOptions.Images,
                                   allowsEditing: true,
-                                  aspect: [4, 3],
+                                  //aspect: [4, 3],
                                   quality: 1,
                                 });
                                 if (!result.cancelled) {
                                   this.setState({ image: result.uri });
+                                  await this.store_to_redux(result.uri)
+                                  
                                 }
                           
-                                console.log(result);
+                                //console.log(result);
                               } catch (E) {
                                 console.log(E);
                               }} else {
-                                  console.log("No permissions")
+                                  alert("No permissions")
                               }
                             
-                        } , style : {backgroundColor : this.props.state.theme.icons_surrounding, height : 40 , width : 40   },   color : this.props.state.theme.icons  },
+                        } , style : {backgroundColor : this.props.state.fun.Layout_Settings.Icons_surroundings, height : 40 , width : 40   },   color : this.props.state.fun.Layout_Settings.Icons_Color  },
                     ]}
                     onStateChange = {()=> this.state.open ? this.setState({open : false}) : this.setState({open : true})  }
             
                 />
                 </Portal>  
-
-                
-    
-
                         
-            <View style = {{ ...styles.accessories , backgroundColor : this.props.state.theme.icons_surrounding }}>
+            <View style = {{ ...styles.accessories , backgroundColor : this.props.state.fun.Layout_Settings.Icons_surroundings}}>
                 <TouchableOpacity onPress = {
                     async ()=>{
-                        //this.props.state.navigation.navigation.navigate("Camera")
                         let image = await ImagePicker.launchCameraAsync({mediaTypes : ImagePicker.MediaTypeOptions.Images , allowsEditing : true , aspect : [4,3] , quality : 0.8 , base64 : true})
-                        console.log(image)
+                        await this.store_to_redux(image.uri)
+                        
                     }
                 }>
-                <Avatar containerStyle = {{elevation : 5 , backgroundColor : this.props.state.theme.icons }} rounded size = {'small'} icon = {{name : 'camera', color : this.props.state.theme.icons_surrounding, type : 'font-awesome'}}/>
+                <Avatar containerStyle = {{elevation : 5 , backgroundColor : this.props.state.fun.Layout_Settings.Icons_Color }} rounded size = {'small'} icon = {{name : 'camera', color : this.props.state.fun.Layout_Settings.Icons_surroundings, type : 'font-awesome'}}/>
                 </TouchableOpacity>
                 <TextInput  onChangeText = {
                     (text) => {
                         this.setState({ message : text  })
-                        //console.log(text)
                     
                     }
-                } inlineImageLeft = 'splashscreen_image' value = {this.state.message}  style = {styles.input} multiline = {true} placeholder = {"       Enter Message "} />
+                } inlineImageLeft = 'splashscreen_image'  value = {this.state.message} style = {styles.input} multiline = {true} placeholder = {"       Enter Message "} />
                 <TouchableOpacity onPress = {
-                    () => {
-                        this.props.send_message(this.state.message);
-                        this.setState({ message : ''  })
-                        //console.log(this.props.state.messages[current_chat])
-                        //this.messo_flatlist.scrollToEnd()
+                    async () => {
+                        if (this.props.state.fun.Connected){
+                            // Saving the message in the redux store
+                            if (this.state.current_index === 0 || this.state.current_index){
+                                this.props.send_message( this.state.current_index ,  {
+                                    'id' : 'Not saved',
+                                    'Contact' : this.state.Contact,
+                                    'Message' : this.state.message,
+                                    'Receiving' : false,
+                                    'Date' : new Date().toString(),
+                                    'status' : 'Not delivered',
+                                    'Server_id' : Server_id,
+                                    'Type' : 'text',
+                                });
+                                this.props.update_chat_position(Server_id)
+                                
+                            } else {
+                                let info = {
+                                    'Server_id' : Server_id,
+                                    'Name' : Name,
+                                    'Contact_name' : '@unknown',
+                                    'Messages' : [
+                                        { 
+                                            'id' : 'Not saved',
+                                            'Contact' : this.state.Contact,
+                                            'Message' : this.state.message,
+                                            'Receiving' : false,
+                                            'Date' : new Date().toString(),
+                                            'Status' : 'Not delivered',
+                                            'Server_id' : Server_id,
+                                            'Type' : 'text'
+                                        }
+                                    ]
+                                }
+                                let index = this.props.state.fun.Messages.length 
+                                this.props.send_message_new(info)
+                                //console.log(info)
+                                this.props.create_new_chat_position({
+                                    'Server_id' : Server_id,
+                                    'index' : index,
+                                })
+                                this.setState({current_index : index })
+                            }
+
+                            //Sending the message to the receiver
+                            await Chat.sendMessage({
+                                'type' : 'Message',
+                                'Receiver' : Server_id,
+                                'Sender' : this.props.state.fun.Fun_profile.Server_id,
+                                'Name' : this.props.state.fun.Fun_profile.Name,
+                                'Contact' : this.props.state.fun.Fun_profile.Contact,
+                                'Message' : this.state.message,
+                                'forwarded' : false,
+                                'Starred' : false,
+                                'Replied' : this.state.reply ? this.state.selected_message.Message.Message : 'null',
+                                'Type' : 'text'
+
+                            })
+                            // Clearing the textinput for more  input
+                            //Storing the message in the database
+                            await fun_database.store_message_db({
+                                'Contact' : this.state.Contact,
+                                'Message' : this.state.message,
+                                'Status' : 'Sent',
+                                'Date' : new Date().toString(),
+                                'Receiving' : false,
+                                'Server_id' : Server_id,
+                                'forwarded' : false,
+                                'Starred' : false,
+                                'Replied' : this.state.reply ? this.state.selected_message.Message.Message : 'null',
+                                'Type' : 'text'
+                            })
+                            this.setState({ message : ''})
+                            if (this.state.reply){
+                                this.setState({ reply_animation : false })
+                                setTimeout(()=>{
+                                    this.setState({reply : false , reply_animation : true})
+                                }, 1500)
+                            }
+                            //this.message = ''
+                            //this.messo_flatlist.scrollToEnd()
+                        } else {
+                            alert('Please ensure you have a stable Internet connection before sending the message')
+                        }
+                        
                     }
                 } >
-                    <Avatar containerStyle = {{elevation : 5 , backgroundColor : this.props.state.theme.icons }} rounded size = {'small'} icon = {{name : 'send', color : this.props.state.theme.icons_surrounding, type : 'font-awesome'}}/>
+                    <Avatar containerStyle = {{elevation : 5 , backgroundColor : this.props.state.fun.Layout_Settings.Icons_Color }} rounded size = {'small'} icon = {{name : 'send', color : this.props.state.fun.Layout_Settings.Icons_surroundings, type : 'font-awesome'}}/>
                 </TouchableOpacity>
                 <TouchableOpacity onPress = {() => {
                     if (this.state.open) {
@@ -401,21 +789,52 @@ class Chats_screen extends Component {
                     }
                     
                   } }>
-                    <Avatar containerStyle = {{elevation : 5 , backgroundColor : this.props.state.theme.icons }} rounded size = {'small'} icon = {{name : this.state.action_opener, color :this.props.state.theme.icons_surrounding, type : 'font-awesome'}}/>
+                    <Avatar containerStyle = {{elevation : 5 , backgroundColor : this.props.state.fun.Layout_Settings.Icons_Color }} rounded size = {'small'} icon = {{name : this.state.action_opener, color :this.props.state.fun.Layout_Settings.Icons_surroundings, type : 'font-awesome'}}/>
                 </TouchableOpacity>
-            </View>    
+            </View>
+            {
+                this.state.reply ? (
+                    <Animatable.View 
+                        animation = { this.state.reply_animation? (reply_message) : (after_reply_message)}
+                        style = {{ position : 'absolute' , justifyContent : 'flex-start', alignItems : 'center' }}
+                        >
+                            <View style = {{ width : 0.95 * ScreenWidth , alignItems : 'flex-end' }} >
+                                <TouchableOpacity onPress = {
+                                    ()=>{
+                                        this.setState({ reply_animation : false })
+                                        setTimeout(()=>{
+                                            this.setState({reply : false , reply_animation : true})
+                                        }, 1500)
+                                    }
+                                    }>
+                                    <Avatar rounded icon = {{ name : 'times' , type : 'font-awesome' , color : 'white' }} size = {'small'}  />
+                                </TouchableOpacity>
+                            </View>
+                            <View style = {styles.reply} >
+                                <Text style = {{...styles.replied_text}}> 
+                                { this.state.selected_message.Message.Message.length > 70 ? this.state.selected_message.Message.Message.slice(0,70) + '...' : this.state.selected_message.Message.Message }
+                                 </Text>
+                            </View>
+                    </Animatable.View>
+                ) : (<View/>)
+            }    
         </View>
         
     )}
 }
 
-let mapStateToProps = (state,ownProps) => {
+let mapStateToProps = (state_redux,ownProps) => {
+    let state = state_redux
     return {state}
 }
 
 let mapDispatchToProps = (dispatch,ownProps) => ({
     change_color : () => dispatch({type : 'color_change'}),
-    send_message : (message) => dispatch({type : 'message_handler', message : message })
+    send_message : (Index,message ) => dispatch({type : 'message_handler', content : message , Index : Index }),
+    send_message_new : (content) => dispatch({type : 'new_chats' , content : content}),
+    create_new_chat_position : (Values) => dispatch({ type : 'new_chats_position' , New : Values }),
+    update_chat_position : (Server_id) => dispatch({type : 'update_chats_positions' , Server_id : Server_id }),
+    delete_message : (Index , message_index) => dispatch({ type : 'delete_message' , Index : Index  , message_Index : message_index }),
 
 })
 
@@ -445,7 +864,7 @@ const styles = StyleSheet.create({
         overflow : 'hidden',
         
     },
-
+   
     accessories : {
         bottom : 0,
         backgroundColor : Theme.lovely.icons_surrounding,
@@ -458,7 +877,7 @@ const styles = StyleSheet.create({
     },
     input : {
         height : 40,
-        width : 250,
+        width : 0.68 * ScreenWidth,
         backgroundColor : Theme.lovely.icons,
         borderRadius : 20,
         elevation : 5,
@@ -474,11 +893,18 @@ const styles = StyleSheet.create({
     },
     messo : {
         
-        
-        
        
+    },
+    reply : {
+        flexWrap : 'nowrap',
+        width : 0.95 * ScreenWidth,
+        height : 0.07 * ScreenHeight,
+        alignItems : 'center',
+        justifyContent : 'center',
+    },
+    replied_text : {
+        color : 'white'
     }
-    
     
 
 })

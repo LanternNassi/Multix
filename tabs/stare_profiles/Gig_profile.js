@@ -378,7 +378,8 @@ export class GigProfile extends Component{
         }
     
     }
-const mapStateToProps = (state) => {
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
     return {state}
 }
 

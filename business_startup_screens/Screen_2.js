@@ -10,35 +10,59 @@ export function Screen_2(props) {
     const [Email , setEmail] = useState('')
     const [Residence , setResidence] = useState('')
     const [Password , setPassword] = useState('')
+    const [email_error , setemail_error] = useState(false)
     return (
         <ScrollView style = {styles.container}>
             
             <View style = {{ top : 20 , alignItems : 'center' }}>   
             <View style = {{ justifyContent : 'space-around' , alignItems : 'center'  }}>
-                <Avatar rounded containerStyle = {{ backgroundColor: props.state.theme.icons_surrounding , elevation : 10 }} icon = {{ name : 'user-plus' , color : props.state.theme.icons , type : 'font-awesome' }} size = {'medium'} />
+                <Avatar rounded containerStyle = {{ backgroundColor: props.fun.Layout_Settings.Icons_surroundings , elevation : 10 }} icon = {{ name : 'user-plus' , color : props.fun.Layout_Settings.Icons_Color , type : 'font-awesome' }} size = {'medium'} />
                 <Text style = {styles.disclaimer}>STEP 2 OF 8</Text>
             </View>
             <View style = {styles.input_container} >
+            {
+                email_error ? (
+                    <View>
+                        <Text style = {{ color : 'red', fontSize : 9 }}>
+                            # Please enter a valid email address
+                        </Text>
+                    </View>
+                ) : (
+                    <View/>
+                )
+            }
             <Fumi
                 style = {{ width : ScreenWidth-10 }}
                 label={'Email'}
                 iconClass={FontAwesomeIcon}
                 iconName={'envelope'}
-                iconColor={props.state.theme.icons_surrounding}
+                value = {Email}
+                iconColor={props.fun.Layout_Settings.Icons_Color}
                 iconSize={20}
                 iconWidth={40}
                 inputPadding={16}
                 inputStyle = {{ color : 'black' }}
+                onEndEditing = {
+                    (text) => {
+                        if (Email.includes('@gmail.com')){
+                            setemail_error(false)
+                        } else {
+                            setEmail('')
+                            setemail_error(true)
+                        }
+                    }
+                }
                 onChangeText = { text => {
                     setEmail(text)
                 } }
             />
+                <View/>
             <Fumi
                 style = {{ width : ScreenWidth-10 }}
                 label={'Residence'}
                 iconClass={FontAwesomeIcon}
                 iconName={'institution'}
-                iconColor={props.state.theme.icons_surrounding}
+                iconColor={props.fun.Layout_Settings.Icons_Color}
                 iconSize={20}
                 iconWidth={40}
                 inputPadding={16}
@@ -47,17 +71,19 @@ export function Screen_2(props) {
                     setResidence(text)
                 } }
             />
+                <View/>
             <Fumi
-                passwordRules = {'required : upper ; required : lower ; required : digit ; minlength : 6 ;'}
+                //passwordRules = {'required : upper ; required : lower ; required : digit ; minlength : 6 ;'}
                 style = {{ width : ScreenWidth-10 }}
                 label={'Password'}
                 iconClass={FontAwesomeIcon}
                 iconName={'low-vision'}
-                iconColor={props.state.theme.icons_surrounding}
+                iconColor={props.fun.Layout_Settings.Icons_Color}
                 iconSize={20}
                 iconWidth={40}
                 inputPadding={16}
                 inputStyle = {{ color : 'black' }}
+                secureTextEntry = {true}
                 onChangeText = { text => {
                     setPassword(text)
                 }}
@@ -68,12 +94,17 @@ export function Screen_2(props) {
   <View style = {{ position : 'relative' , height : ScreenHeight * 0.2 , top : 50 , bottom : 0 }}>
         <TouchableOpacity onPress = {
             () => {
-                props.send_info_email(Email)
-                props.send_info_password(Password)
-                props.send_info_residence(Residence)
-                props.state.navigation.navigation.navigate('Step 3')
+                if (!email_error && Password){
+                    props.send_info_email(Email)
+                    props.send_info_password(Password)
+                    props.send_info_residence(Residence)
+                    props.state.navigation.navigation.navigate('Step 3')
+                } else {
+                    alert('Please validate your email address')
+                }
+               
             }
-        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.state.theme.icons_surrounding, justifyContent : 'center' , alignItems : 'center'  }}>
+        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.fun.Layout_Settings.Icons_Color, justifyContent : 'center' , alignItems : 'center'  }}>
             <Text style = {{color : 'white'}}>Next</Text>
         </TouchableOpacity>
 
@@ -83,8 +114,10 @@ export function Screen_2(props) {
         </ScrollView>
     )
 }
-let mapStateToProps = (state) => {
-    return {state}
+let mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state , fun}
 }
 
 let mapDispatchToProps = (dispatch) => ({

@@ -1,9 +1,10 @@
-import { createStore }  from 'redux';
-import Navigate_Reducer from '../Reducers/navigate.js';
+import { createStore , combineReducers }  from 'redux';
+import BusinessReducer from '../Reducers/BusinessReducer.js';
+import FunReducer from '../Reducers/FunReducer.js'
 
+let rootReducer =  combineReducers({ fun : FunReducer , business : BusinessReducer })
 
-
-export default store = createStore(Navigate_Reducer)
+export default store = createStore(rootReducer)
 
 
 

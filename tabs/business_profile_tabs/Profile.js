@@ -121,10 +121,15 @@ export class Profile extends Component {
                                 
                             }} icon = {{ name : 'camera' , type : 'font-awesome', color : 'white' }} />
                             </TouchableOpacity>
-                            <Avatar source = {{ uri : this.state.profile_info.Account.Profile_pic }} rounded size = {'large'}/>
-                            <View style = {styles.on_encloser}>
-                                <View style = {styles.on}/>
-                            </View>
+                            <Avatar source = { this.state.profile_info.Account.Profile_pic? ({ uri : this.state.profile_info.Account.Profile_pic}) : (require('../../assets/Male_no_profile_pic.jpg'))} rounded size = {'large'}/>
+                            {
+                                this.props.fun.Connected ? (
+                                    <View style = {styles.on_encloser}>
+                                    <View style = {styles.on}/>
+                                </View>
+                                ) : (<View/>)
+                            }
+                           
                         </View>
                         <View>
                         <View style = {styles.word_credentials}>
@@ -221,11 +226,11 @@ export class Profile extends Component {
 
                         </View>
                         <View style = {styles.rating}> 
-                        <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : 'gold' }} rounded />  
-                        <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : 'gold' }} rounded />  
-                        <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : 'gold' }} rounded />  
-                        <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : 'gold' }} rounded />  
-                        <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : 'black' }} rounded />  
+                            <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : (this.state.profile_info.Account.Rating > 0 ? ('gold'):('black')) }} rounded />  
+                            <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : (this.state.profile_info.Account.Rating >= 1 ? ('gold'):('black')) }} rounded />  
+                            <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : (this.state.profile_info.Account.Rating >= 2 ? ('gold'):('black')) }} rounded />  
+                            <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : (this.state.profile_info.Account.Rating >= 3 ? ('gold'):('black')) }} rounded />  
+                            <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : (this.state.profile_info.Account.Rating >= 4 ? ('gold'):('black')) }} rounded />  
                         </View>
                         <View style = {{ ...styles.contacts , borderWidth : 0  }}>
                             <Text style = {{ fontWeight : '700' }}> Contracts: </Text>
@@ -493,7 +498,7 @@ export class Profile extends Component {
                                     fontWeight : '700'
                                 }}>Reviews</Text>
                             <FlatList
-                                data = {this.props.state.friends} 
+                                data = {[]} 
                                 horizontal = {true}
                                 ListEmptyComponent = {
                                     () => (
@@ -522,39 +527,28 @@ export class Profile extends Component {
                 <View style = {styles.divider}/>
 
                 <View style = {styles.group}>       
-                                        <View style = {{
-                                            width : 0.9 * ScreenWidth,
-                                            height : 0.1 * ScreenHeight,
-                                            flexDirection : 'row',
-                                            justifyContent : 'space-between',
-                                            alignItems : 'center'
-                                            
-                                        }}>
-                                                <Text style = {{
-                                                    fontSize : 20,
-                                                    fontWeight : 'bold'
-                                                }}>BILLING METHODS</Text>
-                                                <TouchableOpacity style = {styles.edit}>
-                                                    <Avatar icon = {{ name : 'plus' , type : 'font-awesome' , size : 17 , color : 'green' }} rounded/>
-                                                </TouchableOpacity>
-                                                <TouchableOpacity style = {styles.edit} onPress = {
-                                                    ()=>{
-                                                        this.props.notifier()
-                                                        this.setState({type : 'Billing Payments' , mode : 'Billing information', tags : ['MasterCard' , ] , icon : 'credit-card'})
-                                                        this.setState({action : 'come out' , chips : 'chips' })
-                                                    }
-                                                }>
-                                                    <Avatar icon = {{ name : 'pencil' , type : 'font-awesome' , size : 17 , color : 'black' }} rounded/>
-                                                </TouchableOpacity>
-                                        </View>
-                                        <View style = {styles.tags}>
-                                            <View style = {styles.chips}>
-                                                <Text style = {{
-                                                    fontSize : 18
-                                                }}>{this.state.profile_info.Billing.Name_on_card}</Text>
-                                            </View>
-                                            
-                                        </View>
+                            <View style = {{
+                                width : 0.9 * ScreenWidth,
+                                height : 0.1 * ScreenHeight,
+                                flexDirection : 'row',
+                                justifyContent : 'space-between',
+                                alignItems : 'center'
+                                
+                            }}>
+                                    <Text style = {{
+                                        fontSize : 20,
+                                        fontWeight : 'bold'
+                                    }}>BILLING METHODS</Text>
+                                    
+                            </View>
+                            <View style = {styles.tags}>
+                                <View style = {styles.chips}>
+                                    <Text style = {{
+                                        fontSize : 18
+                                    }}>{this.state.profile_info.Billing.Name_on_card}</Text>
+                                </View>
+                                
+                            </View>
                                 </View>
                 <View style = {styles.divider}/>
 
@@ -574,8 +568,10 @@ let mapDispatchToProps = (dispatch) => ({
     update_profile_account_redux : (name , value) => dispatch({ type : 'update_business_profile_account' , name : name , value : value }),
 
 })
-let mapStateToProps = (state) => {
-    return {state}
+let mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state,fun}
 
 }
 

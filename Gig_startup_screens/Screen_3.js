@@ -413,7 +413,7 @@ export const Show_case = (props) => {
                 props.state.navigation.navigation.navigate('Category' , { type : Type })
             }
         }
-    } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.state.theme.icons_surrounding, justifyContent : 'center' , alignItems : 'center'  }}>
+    } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.fun.Layout_Settings.Icons_Color, justifyContent : 'center' , alignItems : 'center'  }}>
         <Text style = {{color : 'white'}}>Next</Text>
     </TouchableOpacity>
 
@@ -424,8 +424,10 @@ export const Show_case = (props) => {
     )
 }
 
-const mapStateToProps = (state) => {
-    return {state}
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state,fun}
     
 }
 

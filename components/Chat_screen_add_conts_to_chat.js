@@ -16,11 +16,11 @@ export class Chat_screen_add_conts_to_chat extends Component {
     checker = (id) => {
         let success = false ;
         for(let i = 0 ; i <= this.state.checked.length ; i++ ){
-            if(  id === this.state.checked[i] ){
+            if(  id === this.state.checked[i]){
                 success = true;
                 break;
             }
-            
+
             else {
                 success = false
             }
@@ -120,7 +120,8 @@ export class Chat_screen_add_conts_to_chat extends Component {
     }
 }
 
-const mapStateToProps = (state,ownProps) => {
+const mapStateToProps = (state_redux,ownProps) => {
+    let state = state_redux.business
     return {state}
     
 }

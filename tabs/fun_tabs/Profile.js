@@ -15,7 +15,9 @@ function Profile(props) {
 
 let mapStateToProps = (state) =>
     {
-        return {state}
+        let fun = state.fun
+        let business = state.business
+        return {fun , business}
     }
 
 let mapDispatchToProps = (dispatch) => ({

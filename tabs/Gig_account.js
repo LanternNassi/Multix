@@ -38,6 +38,18 @@ export function Gig_account (props) {
             match_gig()
         )
         
+        const get_proposals = () => {
+            let final_list = []
+            if (props.state.Contracts_proposals){
+                for(let i =0; i<props.state.Contracts_proposals.length; i++){
+                    if (props.state.Contracts_proposals[i].Gig_info.Name == info.Gig_info.Gig_name){
+                        final_list.push(props.state.Contracts_proposals[i])
+                    }
+                }
+            }
+            return final_list
+        }
+       const [proposals , setproposals] = useState(get_proposals())
         // state for chosen images
         const [Chosen_image_1 , setChosen_image_1] = useState(info.Gig_info.ShowCase_1)
         const [Chosen_image_2 , setChosen_image_2] = useState(info.Gig_info.ShowCase_2)
@@ -130,9 +142,14 @@ export function Gig_account (props) {
                             left : -(0.005 * ScreenWidth)
                         }} icon = {{ name : 'camera' , type : 'font-awesome', color : 'white' }} />
                         <Avatar source = {{uri : (Chosen_image_1) ? (Chosen_image_1):((Chosen_image_2)?(Chosen_image_2):((Chosen_image_3)?(Chosen_image_3):((Chosen_image_4)?(Chosen_image_4):(null))))}} rounded size = {'large'}/>
-                        <View style = {styles.on_encloser}>
-                            <View style = {styles.on}/>
-                        </View>
+                        {
+                            props.fun.Connected ? (
+                            <View style = {styles.on_encloser}>
+                                <View style = {styles.on}/>
+                            </View>
+                            ) : (<View/>)
+                        }
+                        
                     </View>
                     <View>
                         
@@ -279,7 +296,7 @@ export function Gig_account (props) {
                          width : 0.43 * ScreenWidth,
                          height : 20,
                          flexDirection : 'row',
-                         justifyContent : 'space-around',
+                         justifyContent : 'space-between',
                          alignItems : 'center',
 
                      }}>
@@ -693,7 +710,7 @@ export function Gig_account (props) {
                                    alignItems : 'center'
                                 }}>
                                     <TouchableOpacity style = { styles.chips }>
-                                        <Text>{info.Gig_info.Gig_date_of_expiration.slice(0,10)}</Text>
+                                        <Text>{ info.Gig_info.Gig_date_of_expiration ? info.Gig_info.Gig_date_of_expiration.slice(0,10) : info.Gig_info.Gig_expiration_date.slice(0,10) }</Text>
                                     </TouchableOpacity>
 
                                 </View>
@@ -797,14 +814,24 @@ export function Gig_account (props) {
                                 width :ScreenWidth,
                             }}>
                                 
-                                {
-                                    (info.Gig_projects.length > 0)?(
-                                        
-                                        info.Gig_projects.map((item,index)=>(
+                                <FlatList 
+                                    data = {proposals}
+                                    ListEmptyComponent = {
+                                        ()=>(
+                                            <View style = {{
+                                                height : 0.2 * ScreenHeight,
+                                                justifyContent : 'center',
+                                            }}>
+                                            <Text> No proposed projects yet for this gig </Text>
+                                            </View>
+                                        )
+                                    }
+                                    renderItem = {
+                                        (item,index) => (
                                             <CheckBox  title = {
                                                 <View style = { styles.title }>
-                                                    <Avatar containerStyle = {{ elevation : 5 }} rounded source = {require('../images/test.jpg')} size = {'small'} />
-                                                    <Text style = {{ left : 20 , fontWeight : 'bold'  }}>{ item.Date_of_transaction.slice(0,10) }</Text>
+                                                    <Avatar containerStyle = {{ elevation : 5 }} rounded source = {{ uri : item.item.Applicant_info.Profile_pic  }} size = {'small'} />
+                                                    <Text style = {{ left : 20 , fontWeight : 'bold'  }}>{ (item.item.notification.Message).length > 30 ? item.item.notification.Message.slice(0,30) + '...' : item.item.notification.Message  }</Text>
                                                 </View>
                                             }
                                         onPress = {
@@ -812,21 +839,12 @@ export function Gig_account (props) {
                                                 
                                             }
                                         }
-                                        checked = {true}/>
-                                        ))
-                                    ):(
-                                        <View style = {{
-                                            height : 0.2 * ScreenHeight,
-                                            justifyContent : 'center',
-                                        }}>
-                                        <Text> No proposed projects yet for this gig </Text>
-                                        </View>
-                                    )
-                                
-                                }
+                                        checked = {item.item.Deal_info.Approved}/>
+                                        )
+                                    }
+                                />
                                 
                             </View>  
-
                         </View>
                         <View style = {{
                             flexDirection : 'column',
@@ -891,8 +909,10 @@ export function Gig_account (props) {
         )
     }
 
-const mapStateToProps = (state) => {
-    return {state}
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state , fun}
 }
 
 const mapDispatchToProps = (dispatch) => ({

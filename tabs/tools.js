@@ -1,6 +1,6 @@
 import React , {Component, Children} from 'react'
 import {SpeedDial, Avatar } from 'react-native-elements'
-import {View , Text , TextInput , Image , Button , StyleSheet, TouchableOpacity , Slider, Animated , FlatList,ImageBackground} from 'react-native'
+import {View , Text , TextInput , Image , Button , StyleSheet, TouchableOpacity , ScrollView, Slider, Animated , FlatList,ImageBackground} from 'react-native'
 import { ScreenWidth, ScreenHeight } from 'react-native-elements/dist/helpers';
 import {connect} from 'react-redux'
 import * as Animatable from 'react-native-animatable';
@@ -8,6 +8,8 @@ import * as MediaLibrary from 'expo-media-library';
 import { Audio,Video } from 'expo-av';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import { Asset } from 'react-native-unimodules';
+import * as Progress from 'react-native-progress'
+
 
 const bottomsheet = {
     0 : {
@@ -71,12 +73,14 @@ export class tools extends Component {
         current_max_time : 0,
         current_audio_song : 'Multix',
         playing : 'No',
-        loop_color :[ 'white' , this.props.state.theme.icons_surrounding ] , 
+        loop_color :[ this.props.fun.Layout_Settings.Icons_surroundings , this.props.fun.Layout_Settings.Icons_Color ] , 
         looping : false ,
         current_song_id : null,
         audio_thumbnail : null,
         video_files_flatlist : [],
-        video_uri : ''
+        video_uri : '',
+        muted : false,
+        videos_loaded : false
     }
     filtered_list = [];
     video_ref = null;
@@ -100,7 +104,7 @@ export class tools extends Component {
             }
 
         }else if (type === 'video'){
-            console.log("Am there")
+            //console.log("Am there")
             if (text === ''){
                 this.setState({video_files_flatlist : this.state.video_files.assets})
             }else{
@@ -121,34 +125,36 @@ export class tools extends Component {
         
     }
     get_Audio_Files = async () => {
-        let audio = await MediaLibrary.getAssetsAsync({mediaType : 'audio' , first : 600});
+        let audio = await MediaLibrary.getAssetsAsync({mediaType : 'audio' , first : 10000});
         const {assets} = await MediaLibrary.getAssetsAsync({mediaType : 'photo' , first : 30});
         const thumb_id = Math.floor(Math.random()/1*30)
         this.setState({ audio_thumbnail : assets[thumb_id].uri  })
-        this.setState({audio_files : audio,audio_files_flatlist : audio.assets})
+        this.setState({audio_files : audio , audio_files_flatlist : audio.assets})
     }
     get_Video_Files = async () => {
-        let video = await MediaLibrary.getAssetsAsync({mediaType : 'video' , first : 100 })
+        let video = await MediaLibrary.getAssetsAsync({mediaType : 'video' , first : 580 })
         const {assets,totalCount} = video
         const processed_assets = []
         for(let i = 0 ; i<=assets.length-1; i++ ){
             const video_thumb = await this.generateThumbnail(assets[i].uri)
             processed_assets.push({...assets[i],video_thumbnail :  video_thumb.uri})
         }
-        this.setState({video_files : {...video , assets : processed_assets} , video_files_flatlist : processed_assets})
+        this.setState({video_files : {...video , assets : processed_assets} , video_files_flatlist : processed_assets , videos_loaded : true})
     }
     generateThumbnail = async (uri_video) => {
         try {
           const thumb = await VideoThumbnails.getThumbnailAsync(
             uri = uri_video,
             {
-              time: 1000,
+              time: 100,
             }
           );
-          return (thumb)
+        return (thumb)
+         
         } catch (e) {
-          console.log(e);
-
+            //console.log(uri_video)
+          //console.log(e);
+          return ({uri : null})
         }
         
       };
@@ -176,6 +182,7 @@ export class tools extends Component {
         if (Asset.mediaType === 'audio' && this.state.type_playing === 'audio' ){
             try {
                 await this.state.soundObject.loadAsync(Asset);
+               
                 await this.state.soundObject.setProgressUpdateIntervalAsync(1000)
                 this.state.soundObject.setOnPlaybackStatusUpdate(async (AVP_status)=>{
                     if (AVP_status.isPlaying) {
@@ -192,6 +199,11 @@ export class tools extends Component {
                     } 
                 })
                 await this.state.soundObject.playAsync();
+                if (this.state.looping){
+                    this.state.soundObject.setIsLoopingAsync(true)
+                } else {
+                    this.state.soundObject.setIsLoopingAsync(false)
+                }
                
             } catch (error) {
                 console.log(error)
@@ -200,6 +212,11 @@ export class tools extends Component {
         } else if ( Asset.mediaType === 'video'&& this.state.type_playing === 'video' ){
             try {
                 await this.video_ref.loadAsync(Asset);
+                if (this.state.looping){
+                    this.state.soundObject.setIsLoopingAsync(true)
+                } else {
+                    this.state.soundObject.setIsLoopingAsync(false)
+                }
                 await this.video_ref.setProgressUpdateIntervalAsync(1000)
                 this.video_ref.setOnPlaybackStatusUpdate(async (AVP_status)=>{
                     if (AVP_status.isPlaying) {
@@ -213,9 +230,15 @@ export class tools extends Component {
                         await this.video_ref.unloadAsync()
                         await this.video_ref.loadAsync(obj)
                         await this.video_ref.playAsync()
+                       
                     } 
                 })
                 await this.video_ref.playAsync();
+                if (this.state.looping){
+                    this.video_ref.setIsLoopingAsync(true)
+                } else {
+                    this.video_ref.setIsLoopingAsync(false)
+                }
                
             } catch (error) {
                 console.log(error)
@@ -286,6 +309,12 @@ export class tools extends Component {
         
     }
     async componentDidMount() {
+        //await Audio.setAudioModeAsync({
+            //staysActiveInBackground : true,
+          //  playThroughEarpieceAndroid : true,
+            //interruptionModeAndroid : 1,
+            
+        //})
         const {status} = await MediaLibrary.getPermissionsAsync();
         if (status === "granted"){
             await this.get_Audio_Files();
@@ -327,8 +356,8 @@ export class tools extends Component {
                             }
                         }
                          >
-                            <Avatar rounded containerStyle = {{ backgroundColor : this.props.state.theme.icons_surrounding  }} 
-                            icon = {{ name : 'music' , color : this.props.state.theme.icons , type : 'font-awesome' }} size = {'medium'} />
+                            <Avatar rounded containerStyle = {{ backgroundColor : this.props.fun.Layout_Settings.Icons_surroundings  }} 
+                            icon = {{ name : 'music' , color : this.props.fun.Layout_Settings.Icons_Color , type : 'font-awesome' }} size = {'medium'} />
                         </TouchableOpacity>
                     </View>
                         <Text style = {styles.header_title}> Playing Now </Text>
@@ -355,15 +384,15 @@ export class tools extends Component {
                             }
                         }
                          >
-                            <Avatar rounded containerStyle = {{ backgroundColor : this.props.state.theme.icons_surrounding  }} 
-                            icon = {{ name : 'film' , color : this.props.state.theme.icons , type : 'font-awesome' }} size = {'medium'} />
+                            <Avatar rounded containerStyle = {{ backgroundColor : this.props.fun.Layout_Settings.Icons_surroundings  }} 
+                            icon = {{ name : 'film' , color : this.props.fun.Layout_Settings.Icons_Color , type : 'font-awesome' }} size = {'medium'} />
                         </TouchableOpacity>
                     </View>
                 </View>
                 <View style = {{ height : 200 , width : ScreenWidth , justifyContent : 'center' , alignItems : 'center' ,  }}>
                         { this.state.type_playing === 'audio' ? (
                             <View style = {{ height : 200 , width : 200 , zIndex : 0, borderRadius : 100 , backgroundColor : 'white', elevation:20, justifyContent : 'center' , alignItems : 'center' ,   }}>
-                            <Image source = {require('../assets/multix_logo.jpg')} style = {{  height : 189 , width : 189 , borderRadius : 94.5 }} />
+                            <Image source = {require('../assets/Notifications.png')} style = {{  height : 189 , width : 189 , borderRadius : 94.5 }} />
                             </View>
                         ) : (
                             <View style = {{marginTop : 20  }}>
@@ -378,12 +407,12 @@ export class tools extends Component {
                         />
                         <TouchableOpacity onPress = {
                             ()=>{
-                                console.log("am there")
+                                //console.log("am there")
                                 this.video_ref.presentFullscreenPlayer()
                             }
                         }>
                         <Avatar 
-                         size = {'medium'} icon = {{ name : 'expand',color : this.props.state.theme.icons_surrounding , type : 'font-awesome'}} rounded containerStyle= {{
+                         size = {'medium'} icon = {{ name : 'expand',color : this.props.fun.Layout_Settings.Icons_surroundings , type : 'font-awesome'}} rounded containerStyle= {{
                             position : 'absolute',
                             right : 20,
                             bottom:0,
@@ -394,16 +423,16 @@ export class tools extends Component {
                         ) }
                         
                 </View> 
-                <View style = {{ width : ScreenWidth , height : 100  , marginTop : 20 , flexDirection : 'row', justifyContent : 'space-evenly', alignItems : 'center'  }}>
+                <View style = {{ width : ScreenWidth ,  height : 0.15 * ScreenHeight  , marginTop : 20 , flexDirection : 'row', justifyContent : 'space-evenly', alignItems : 'center'  }}>
                     <TouchableOpacity onPress = {
                         async ()=>{
                             if(this.state.looping){
-                                this.setState({ loop_color :[ 'white' , this.props.state.theme.icons_surrounding ] , looping : false })
+                                this.setState({ loop_color :[ this.props.fun.Layout_Settings.Icons_surroundings , this.props.fun.Layout_Settings.Icons_Color ] , looping : false })
                                 this.state.type_playing === 'audio'?
                                 await this.state.soundObject.setIsLoopingAsync(false) : await this.video_ref.setIsLoopingAsync(false)
 
                             } else {
-                                this.setState({ loop_color :[ this.props.state.theme.icons_surrounding , 'white' ] , looping : true })
+                                this.setState({ loop_color :[ this.props.fun.Layout_Settings.Icons_Color , this.props.fun.Layout_Settings.Icons_surroundings ] , looping : true })
                                 this.state.type_playing === 'audio'?
                                 await this.state.soundObject.setIsLoopingAsync(true) : await this.video_ref.setIsLoopingAsync(true)
 
@@ -424,10 +453,10 @@ export class tools extends Component {
                             await this.play_Random(this.state.audio_files.length-1)
                         }
                     } >
-                    <Avatar containerStyle = {{ backgroundColor : 'white', elevation : 10 }} rounded icon = {{ name : 'random' , type : 'font-awesome' , color : this.props.state.theme.icons_surrounding }} size = {'medium'} />
+                    <Avatar containerStyle = {{ backgroundColor : this.props.fun.Layout_Settings.Icons_surroundings, elevation : 10 }} rounded icon = {{ name : 'random' , type : 'font-awesome' , color : this.props.fun.Layout_Settings.Icons_Color }} size = {'medium'} />
                     </TouchableOpacity>
                 </View>
-                <View style = {{ marginTop : 20 , width : ScreenWidth-10  , height : 30 , flexDirection : 'row' , justifyContent : 'space-evenly' , alignItems : 'center'}}>
+                <View style = {{ marginTop : 20 , width : 0.99 * ScreenWidth  , height : 30 , flexDirection : 'row' , justifyContent : 'space-evenly' , alignItems : 'center'}}>
                     <Text style = {{ fontSize : 15 , fontWeight : '700' }}> {this.millistoMinutesAndSeconds(this.state.current_time)} </Text>
                     <Slider maximumValue = {this.state.current_max_time*1000}
                     disabled = {false}
@@ -435,15 +464,15 @@ export class tools extends Component {
                         this.state.type_playing === 'audio'?
                         this.state.soundObject.playFromPositionAsync(seconds) : this.video_ref.playFromPositionAsync(seconds)
                     }}
-                    style = {{ width : 290 }} 
+                    style = {{ width : 0.8 * ScreenWidth }} 
                     minimumValue = {0}
                     value = {this.state.current_time}
                      maximumTrackTintColor = {'red'} 
-                     minimumTrackTintColor = { this.props.state.icons_surrounding}  />
+                     minimumTrackTintColor = { this.props.fun.Layout_Settings.Icons_Color}  />
                      <Text style = {{ fontSize : 15 , fontWeight : '700'  }} >{this.seconds(this.state.current_max_time)} </Text>
 
                 </View>
-                <View style = {{ height : 100, width : ScreenWidth , flexDirection : 'row' , justifyContent : 'space-around', alignItems : 'center'  }}>
+                <View style = {{ height : 0.2 * ScreenHeight, width : ScreenWidth , flexDirection : 'row' , justifyContent : 'space-around', alignItems : 'center'  }}>
                     <TouchableOpacity onPress = {
                         async ()=>{
                             const id = this.state.current_song_id
@@ -451,8 +480,20 @@ export class tools extends Component {
                             await this.play_previous(id)
                         }
                     }>
-                        <Avatar rounded containerStyle = {{ backgroundColor : this.props.state.theme.icons_surrounding , elevation : 18  }} icon = {{ name : 'fast-backward' , color : this.props.state.theme.icons , type : 'font-awesome'  }} size = {'medium'}  />
+                        <Avatar rounded containerStyle = {{ backgroundColor : this.props.fun.Layout_Settings.Icons_surroundings , elevation : 18  }} icon = {{ name : 'fast-backward' , color : this.props.fun.Layout_Settings.Icons_Color , type : 'font-awesome'  }} size = {'medium'}  />
                     </TouchableOpacity>
+
+                    <TouchableOpacity onPress = {
+                        async ()=>{
+                            if (this.state.type_playing === 'video'){
+                                await this.video_ref.presentFullscreenPlayerAsync()
+                            }
+                        }
+                    }>
+                    <Avatar rounded containerStyle = {{ backgroundColor : this.props.fun.Layout_Settings.Icons_surroundings , elevation : 18  }} icon = {{ name : 'arrows-alt' , color : this.props.fun.Layout_Settings.Icons_Color , type : 'font-awesome'  }} size = {'medium'}  />
+                    </TouchableOpacity>
+
+
                     <TouchableOpacity onPress = {
                         async ()=> {
                             if (this.state.playing === "playing"){
@@ -476,8 +517,35 @@ export class tools extends Component {
                             
                         }
                     }>
-                    <Avatar rounded containerStyle = {{ backgroundColor : this.props.state.theme.icons_surrounding , elevation : 18  }} icon = {{ name : this.state.playing === 'playing' || this.state.playing === "No"? 'pause':'play' , color : this.props.state.theme.icons , type : 'font-awesome'  }} size = {'medium'}  />
+                    <Avatar rounded containerStyle = {{ backgroundColor : this.props.fun.Layout_Settings.Icons_surroundings , elevation : 18  }} icon = {{ name : this.state.playing === 'playing' || this.state.playing === "No"? 'pause':'play' , color : this.props.fun.Layout_Settings.Icons_Color , type : 'font-awesome'  }} size = {'large'}  />
                     </TouchableOpacity>
+
+
+                    <TouchableOpacity onPress = {
+                        async ()=>{
+                            if (this.state.playing === "playing" && !this.state.muted){
+                                if (this.state.type_playing === 'audio'){
+                                    this.setState({muted : true})
+                                    await this.state.soundObject.setIsMutedAsync(true)
+                                } else if (this.state.type_playing === 'video'){
+                                    this.setState({muted : true})
+                                    await this.video_ref.setIsMutedAsync(true)
+                                }               
+                        } else if (this.state.playing === 'playing' && this.state.muted){
+                            if (this.state.type_playing === 'audio'){
+                                this.setState({muted : false})
+                                await this.state.soundObject.setIsMutedAsync(false)
+                            } else if (this.state.type_playing === 'video'){
+                                this.setState({muted : false})
+                                await this.video_ref.setIsMutedAsync(false)
+                            }    
+                        }
+                    }
+                    }>
+                    <Avatar rounded containerStyle = {{ backgroundColor : this.props.fun.Layout_Settings.Icons_surroundings , elevation : 18  }} icon = {{ name : this.state.muted ? ('microphone-slash') : ('microphone') , color : this.props.fun.Layout_Settings.Icons_Color , type : 'font-awesome'  }} size = {'medium'}  />
+                    </TouchableOpacity>
+
+
                     <TouchableOpacity onPress = {
                         async ()=>{
                             const id = this.state.current_song_id 
@@ -485,7 +553,7 @@ export class tools extends Component {
                             await this.play_next(id)
                         }
                     }>
-                    <Avatar rounded containerStyle = {{ backgroundColor : this.props.state.theme.icons_surrounding , elevation : 18  }} icon = {{ name : 'fast-forward' , color : this.props.state.theme.icons , type : 'font-awesome'  }} size = {'medium'}  />
+                    <Avatar rounded containerStyle = {{ backgroundColor : this.props.fun.Layout_Settings.Icons_surroundings , elevation : 18  }} icon = {{ name : 'fast-forward' , color : this.props.fun.Layout_Settings.Icons_Color , type : 'font-awesome'  }} size = {'medium'}  />
                     </TouchableOpacity>
                 </View>
                 
@@ -520,6 +588,7 @@ export class tools extends Component {
                       </TouchableOpacity>
                       </View>
                      <FlatList
+                        indicatorStyle = {'white'}
                          horizontal = {false}
                          data = {this.state.audio_files_flatlist}
                          renderItem = {
@@ -528,7 +597,7 @@ export class tools extends Component {
                                      async ()=> {
                                          await this.state.soundObject.unloadAsync();
                                          this.setState({current_max_time : item.item.duration ,type_playing : 'audio', playing : 'playing', current_audio_song : (item.item.filename).slice(0,21), current_song_id : item.index , unfold : bottomsheet_fold})
-                                         console.log(this.state.current_song_id)
+                                         //console.log(this.state.current_song_id)
                                          await this.play_audio(item.item,item.index)
                                          setTimeout(()=>{
                                          this.setState({audio_sheet : false , unfold : bottomsheet,audio_files_flatlist : this.state.audio_files.assets})
@@ -538,7 +607,7 @@ export class tools extends Component {
                                      <Avatar source = {{uri : this.state.audio_thumbnail}} rounded size = {'medium'} />
                                      <Text style = {{ color : 'white' }}> {(item.item.filename).slice(0,21)}... </Text>
                                      <Avatar rounded icon = {{ name : 'play-circle', type : 'font-awesome', color : 'white' }} size = {'small'} />
-                                     <Text style = {{ color : 'white' }} > {(item.item.duration/60).toFixed(2)}  </Text>
+                                     <Text style = {{ color : 'white' }} > {this.seconds(item.item.duration)}  </Text>
                                  </TouchableOpacity>
                              )
                          }
@@ -581,40 +650,49 @@ export class tools extends Component {
                       <Avatar rounded icon = {{ name : 'times' , type : 'font-awesome' , color : 'white' }} size = {'medium'}  />
                       </TouchableOpacity>
                       </View>
-                     <FlatList
-                         horizontal = {false}
-                         data = {this.state.video_files_flatlist}
-                         renderItem = {
-                              (item)=>(
-                                 
-                                 <TouchableOpacity style = {styles.list_item} onPress = {
-                                        async ()=> {
-                                            this.setState({current_max_time : item.item.duration , video_uri : item.item.uri, type_playing : 'video' ,  playing : 'playing', current_audio_song : (item.item.filename).slice(0,21), current_song_id : item.index , unfold : bottomsheet_fold})
-                                            this.state.type_playing === 'audio' && this.state.playing === 'playing' ? 
-                                                await this.state.soundObject.unloadAsync()
-                                             : 
-                                                (await this.video_ref.unloadAsync())
-                                            setTimeout(async ()=>{
-                                                await this.play_audio(item.item)
-                                            },1000)
-                                            
-                                            setTimeout(()=>{
-                                            this.setState({video_sheet : false , unfold : bottomsheet,})
-                                        }, 1000)
-
+                      {
+                          this.state.videos_loaded ? (
+                            <FlatList
+                            horizontal = {false}
+                            data = {this.state.video_files_flatlist}
+                            renderItem = {
+                                 (item)=>(
+                                    
+                                    <TouchableOpacity style = {styles.list_item} onPress = {
+                                           async ()=> {
+                                               this.setState({current_max_time : item.item.duration , video_uri : item.item.uri, type_playing : 'video' ,  playing : 'playing', current_audio_song : (item.item.filename).slice(0,21), current_song_id : item.index , unfold : bottomsheet_fold})
+                                               this.state.type_playing === 'audio' && this.state.playing === 'playing' ? 
+                                                   await this.state.soundObject.unloadAsync()
+                                                : 
+                                                   (await this.video_ref.unloadAsync())
+                                               setTimeout(async ()=>{
+                                                   await this.play_audio(item.item)
+                                               },1000)
+                                               
+                                               setTimeout(()=>{
+                                               this.setState({video_sheet : false , unfold : bottomsheet,})
+                                           }, 1000)
+   
+                                           }
                                         }
-                                     }
-                                  >
-                                     <Avatar source = {{uri : item.item.video_thumbnail }} rounded size = {'medium'} />
-                                     <Text style = {{ color : 'white' }}> {(item.item.filename).slice(0,21)}... </Text>
-                                     <Avatar rounded icon = {{ name : 'play-circle', type : 'font-awesome', color : 'white' }} size = {'small'} />
-                                     <Text style = {{ color : 'white' }} > {(item.item.duration/60).toFixed(2)}  </Text>
-                                 </TouchableOpacity>
-                             )
-                         }
-                         
- 
-                     />
+                                     >
+                                        <Avatar source = {{uri : item.item.video_thumbnail }} rounded size = {'medium'} />
+                                        <Text style = {{ color : 'white' }}> {(item.item.filename).slice(0,21)}... </Text>
+                                        <Avatar rounded icon = {{ name : 'play-circle', type : 'font-awesome', color : 'white' }} size = {'small'} />
+                                        <Text style = {{ color : 'white' }} > {this.seconds(item.item.duration)}  </Text>
+                                    </TouchableOpacity>
+                                )
+                            }
+                      
+                        />
+                          ) : (
+                              <View style = {{ flex : 1 , alignItems : 'center' , justifyContent : 'center' }}>
+                                <Progress.CircleSnail  size = { 60 } progress = {0.7} color = {'white'} style = { styles.play }/>
+                                <Text style = {{ color : 'white' }}>Loading video files ...</Text>
+                              </View>
+                          )
+                      }
+                   
  
  
                  </Animatable.View>
@@ -628,8 +706,10 @@ export class tools extends Component {
     }
    
 }
-const mapStateToProps = (state) => {
-    return {state}
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state,fun}
 }
 
 
@@ -648,7 +728,7 @@ const styles = StyleSheet.create({
         flexDirection : 'row',
         justifyContent : 'space-around',
         alignItems : 'center',
-        height : 80,
+        height : 0.09 * ScreenHeight,
         width : ScreenWidth,
     },
     T_O : {

@@ -10,7 +10,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Profile from './business_profile_tabs/Profile.js'
 import Notifications from './business_profile_tabs/Notifications.js'
 import Proposals from './business_profile_tabs/Proposals.js'
-import Saved from './business_profile_tabs/Saved.js'
 import Contracts from './business_profile_tabs/Contracts.js'
 import * as animatable from 'react-native-animatable'
 import * as SQLite from 'expo-sqlite'
@@ -20,10 +19,35 @@ import * as SQLite from 'expo-sqlite'
 const Tab = createBottomTabNavigator();
 
 
-
-
-
 export class Business_account extends Component {
+    state = {
+      open : false
+    }
+
+    fetch_resources = async() => {
+      this.props.state.request_business_json({
+        method : 'GET',
+        url : 'fetch_contracts_notifications_proposals/',
+        data : {},
+        timeout : 1000000
+      }).then((response)=>{
+        if (response.status === 200){
+          this.setState({ open : true })
+          console.log(response.data)
+          this.props.store_gig_notifications(response.data)
+        }
+      })
+    }
+    //Intermediate = async() => {
+      //if (!this.state.open){
+        //await this.fetch_resources()
+        //setTimeout(async()=>{this.Intermediate()},2000)
+      //}
+    //}
+    componentDidMount = async() =>{
+      //await this.Intermediate()
+      await this.fetch_resources()
+    }
    
     state = {
         anime : ''
@@ -33,6 +57,8 @@ export class Business_account extends Component {
             <Tab.Navigator initialRouteName = {'PROFILE'}  screenOptions = {{tabBarLabelPosition :'below-icon',
             tabBarShowLabel:'true',
              tabBarHideOnKeyboard : true,
+             tabBarActiveBackgroundColor : this.props.fun.Layout_Settings.Bottom_navigation,
+             tabBarInactiveBackgroundColor : this.props.fun.Layout_Settings.Bottom_navigation
              
     }}>
       <Tab.Screen  name="PROFILE" component={Profile}
@@ -40,7 +66,7 @@ export class Business_account extends Component {
         headerShown : false,
         tabBarIcon : ({ color, size}) => (
           <animatable.Text animation = {this.state.anime} iterationCount={'infinite'} direction="alternate">
-          <MaterialCommunityIcons name = "account-circle" color = {color} size={26}/>
+          <MaterialCommunityIcons name = "account-circle" color = {this.props.fun.Layout_Settings.Bottom_navigation_icons_color} size={26}/>
           </animatable.Text>
         ),
       }}/>
@@ -48,7 +74,7 @@ export class Business_account extends Component {
         headerShown : false,
         tabBarIcon : ({ color, size}) => (
           <animatable.Text animation = {this.state.anime} iterationCount={'infinite'} direction="alternate-reverse">
-          <MaterialCommunityIcons name = "account-tie" color = {color} size={26}/>
+          <MaterialCommunityIcons name = "account-tie" color = {this.props.fun.Layout_Settings.Bottom_navigation_icons_color} size={26}/>
           </animatable.Text>
         ),
       }}/>
@@ -56,7 +82,7 @@ export class Business_account extends Component {
         headerShown : false,
         tabBarIcon : ({ color, size}) => (
           <animatable.Text animation = {this.state.anime} iterationCount={'infinite'} direction="alternate">
-          <MaterialCommunityIcons name = "account-switch" color = {color} size={26}/>
+          <MaterialCommunityIcons name = "account-switch" color = {this.props.fun.Layout_Settings.Bottom_navigation_icons_color} size={26}/>
           </animatable.Text>
         ),
       }} />
@@ -64,18 +90,11 @@ export class Business_account extends Component {
       headerShown : false,
         tabBarIcon : ({ color, size}) => (
           <animatable.Text animation = {this.state.anime} iterationCount={'infinite'} direction="alternate-reverse">
-          <MaterialCommunityIcons name = "comment-account" color = {color} size={26}/>
+          <MaterialCommunityIcons name = "comment-account" color = {this.props.fun.Layout_Settings.Bottom_navigation_icons_color} size={26}/>
           </animatable.Text>
         ),
       }} />
-      <Tab.Screen name="SAVED" component={Saved} options={{
-        headerShown : false,
-        tabBarIcon : ({ color, size}) => (
-          <animatable.Text animation = {this.state.anime} iterationCount={'infinite'} direction="alternate">
-          <MaterialCommunityIcons name = "content-save" color = {color} size={26}/>
-          </animatable.Text>
-        ),
-      }} />
+    
     </Tab.Navigator>
         )
     }
@@ -83,11 +102,15 @@ export class Business_account extends Component {
 
 let mapDispatchToProps = (dispatch) => ({
   store_profile_redux : (Profile) => dispatch({type : 'update_business_profile' , value : Profile}),
-  update_profile_redux : (key , value) => dispatch({type : 'business_profile_up' , key : key , value : value})
+  update_profile_redux : (key , value) => dispatch({type : 'business_profile_up' , key : key , value : value}),
+  store_gig_notifications : (Message) => dispatch({type : 'ws_gig_notifications_message' , Message : Message}),
+
 
 })
-let mapStateToProps = (state) => {
-    return {state}
+let mapStateToProps = (state_redux) => {
+  let state = state_redux.business
+  let fun = state_redux.fun
+    return {state,fun}
 
 }
 

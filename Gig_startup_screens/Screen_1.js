@@ -99,18 +99,23 @@ export const Credentials = (props) => {
 
                 } 
                 else if(!pressed){
-                    props.destroyer()
-                    setpressed(true)
-                    setTimeout(() => {
-                        props.send_initiation(Type)
-                        props.send_name(Name)
-                        props.send_location(Location)
-                        props.send_salary(Salary)
-                    } , 800)
-                    props.state.navigation.navigation.navigate('Extra Information' , { type : Type })
+                    if (Name){
+                        props.destroyer()
+                        setpressed(true)
+                        setTimeout(() => {
+                            props.send_initiation(Type)
+                            props.send_name(Name)
+                            props.send_location(Location)
+                            props.send_salary(Salary)
+                        } , 800)
+                        props.state.navigation.navigation.navigate('Extra Information' , { type : Type })
+                    } else {
+                        alert('Please input the name')
+                    }
+                 
                 }             
             }
-        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.state.theme.icons_surrounding, justifyContent : 'center' , alignItems : 'center'  }}>
+        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.fun.Layout_Settings.Icons_Color, justifyContent : 'center' , alignItems : 'center'  }}>
             <Text style = {{color : 'white'}}>Next</Text>
         </TouchableOpacity>
 
@@ -121,8 +126,10 @@ export const Credentials = (props) => {
     )
 }
 
-const mapStateToProps = (state) => {
-    return {state}
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state,fun}
     
 }
 

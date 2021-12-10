@@ -18,15 +18,28 @@ export class Account_profile extends Component {
         profile_info : null
     }
     get_account = (id) => {
-        this.props.state.request_business_json({
-            method : 'GET',
-            url : 'account-detail/?id=' + id,
+        if (id){
+            this.props.state.request_business_json({
+                method : 'GET',
+                url : 'account-detail/?id=' + id,
+    
+            }).then((response)=>{
+                if (response.status === 200){
+                    this.setState({ profile_info : response.data , IsReady : true})
+                }
+            })
+        } else {
+            this.props.state.request_business_json({
+                method : 'GET',
+                url : 'account-detail/',
+            }).then((response)=>{
+                if (response.status === 200){
+                    this.setState({ profile_info : response.data , IsReady : true})
+                }
+            })
 
-        }).then((response)=>{
-            if (response.status === 200){
-                this.setState({ profile_info : response.data , IsReady : true})
-            }
-        })
+        }
+       
     }
     componentDidMount = () =>{
         const {id} = this.props.route.params
@@ -421,7 +434,8 @@ export class Account_profile extends Component {
 let mapDispatchToProps = (dispatch) => ({
 
 })
-let mapStateToProps = (state) => {
+let mapStateToProps = (state_redux) => {
+    let state = state_redux.business
     return {state}
 
 }

@@ -33,7 +33,7 @@ export function Screen_3(props) {
         <ScrollView style = {styles.container}>
             <View style = {{ top : 20 , alignItems : 'center' , height : ScreenHeight * 0.9  }}>   
             <View style = {{ justifyContent : 'space-around' , alignItems : 'center'  }}>
-                <Avatar rounded containerStyle = {{ backgroundColor: props.state.theme.icons_surrounding , elevation : 10 }} icon = {{ name : 'user-plus' , color : props.state.theme.icons , type : 'font-awesome' }} size = {'medium'} />
+                <Avatar rounded containerStyle = {{ backgroundColor: props.fun.Layout_Settings.Icons_surroundings , elevation : 10 }} icon = {{ name : 'user-plus' , color : props.fun.Layout_Settings.Icons_Color , type : 'font-awesome' }} size = {'medium'} />
                 <Text style = {styles.disclaimer}>STEP 3 OF 8</Text>
             </View>
             <View style = {styles.input_container} >
@@ -48,7 +48,7 @@ export function Screen_3(props) {
                 label={'Birth Date'}
                 iconClass={FontAwesomeIcon}
                 iconName={'calendar'}
-                iconColor={props.state.theme.icons_surrounding}
+                iconColor={props.fun.Layout_Settings.Icons_Color}
                 iconSize={20}
                 iconWidth={40}
                 inputPadding={16}
@@ -62,6 +62,7 @@ export function Screen_3(props) {
                 iconClass={FontAwesomeIcon}
                 iconName={'user'}
                 iconSize={20}
+                iconColor = {props.fun.Layout_Settings.Icons_Color}
                 iconWidth={40}
                 inputPadding={16}
                 inputStyle = {{ color : 'black',fontSize: 15, }}
@@ -80,7 +81,7 @@ export function Screen_3(props) {
                 props.send_info_description(Description)
                 props.state.navigation.navigation.navigate('Billing Information')
             }
-        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.state.theme.icons_surrounding, justifyContent : 'center' , alignItems : 'center'  }}>
+        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.fun.Layout_Settings.Icons_Color, justifyContent : 'center' , alignItems : 'center'  }}>
             <Text style = {{color : 'white'}}>Next</Text>
         </TouchableOpacity>
 
@@ -90,8 +91,10 @@ export function Screen_3(props) {
         </ScrollView>
     )
 }
-let mapStateToProps = (state) => {
-    return {state}
+let mapStateToProps = (state_redux) => {
+    let state = state_redux.business
+    let fun = state_redux.fun
+    return {state,fun}
 }
 
 let mapDispatchToProps = (dispatch) => ({

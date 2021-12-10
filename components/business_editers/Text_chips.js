@@ -172,7 +172,7 @@ export class Text_chips extends Component{
                         keysForTag={', '}/>
                     </View>
                     <Text style={{marginBottom: 10 , color : 'white'}}>
-                        The idea with React Native Elements is more about component structure than actual design.
+                        Tags help in providing detailed information about you which will helps clients approve you easily without wasting time
                         </Text>
                         <Card.Divider/>
                         <View style = {styles.buttons_container}>
@@ -189,6 +189,11 @@ export class Text_chips extends Component{
                                     }).then((response) => {
                                         console.log(response.data)
                                         this.update_profile('business profile' , this.props.db_table , this.props.name,response.data)
+                                        this.setState({done : true})                           
+                                        setTimeout(()=>{
+                                            this.props.notifier()
+                                            this.setState({done : false})
+                                        },800)
                                     })
                                 } else if ( this.props.effect === 'Gig' ){
                                     let data = props.type
@@ -199,6 +204,12 @@ export class Text_chips extends Component{
                                         data : overall_data,
                                     }).then((response) => {
                                         console.log(response.data)
+                                        //this.update_profile('Gig' , this.props.db_table , this.props.name,response.data)
+                                        this.setState({done : true})                           
+                                        setTimeout(()=>{
+                                            this.props.notifier()
+                                            this.setState({done : false})
+                                        },800)
                                     })
                                 }
                                 
@@ -229,7 +240,8 @@ export class Text_chips extends Component{
     
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
     return {state}
     
 }

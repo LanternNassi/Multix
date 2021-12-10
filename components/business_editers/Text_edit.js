@@ -50,6 +50,8 @@ const collapse = {
 export const Text_edit = (props) => {
     const [ value , setvalue ] = useState(props.value)
     const [ done , setdone ] = useState(false)
+    const [name_error , setname_error] = useState(false)
+    const [phone_error , setphone_error] = useState(false)
 
     const query_maker = ( type_of_profile , official_parameter) => {
         if (type_of_profile === 'business profile'){
@@ -58,6 +60,35 @@ export const Text_edit = (props) => {
             return 'UPDATE Gigs SET ' + official_parameter + ' = ? WHERE Server_id = ?'  
 
         }
+    }
+    const validate_name = () => {
+        props.state.request_business_json({
+            method : 'POST',
+            url : '/Validate_name',
+            data : {'Name' : value}
+        }).then((response)=>{
+            if (response.status == 207){
+                setName('')
+                setname_error(true)
+            } else {
+                setname_error(false)
+            }
+        })
+    }
+
+    const validate_phone = () => {
+        props.state.request_business_json({
+            method : 'POST',
+            url : '/Validate_number',
+            data : {'Contact' : value}
+        }).then((response)=>{
+            if (response.status == 207){
+                setContact('')
+                setphone_error(true)
+            } else {
+                setphone_error(false)
+            }
+        })
     }
 
     const update_profile = (type_of_profile , official_parameter , updated_value) =>{
@@ -103,6 +134,31 @@ export const Text_edit = (props) => {
                     }}> Change {props.type}</Card.Title>
                     <Card.Divider/>
                     <View style = {styles.text_input}>
+                        {
+                            (name_error || phone_error)  && (props.type === 'Name' || props.type === 'Contact') ? (
+                                <View>
+                                        {
+                                            name_error ? (
+                                                <Text style = {{
+                                                    fontSize : 9,
+                                                    color : 'red'
+                                                }}>
+                                                #Name is already in use by another client
+                                                </Text>
+                                            ) : (
+                                                <Text style = {{
+                                                    fontSize : 9,
+                                                    color : 'red'
+                                                }}>
+                                                #Contact is already in use by another client
+                                                </Text>
+                                            )
+                                        }
+                                </View>
+                            ) : (
+                                <View/>
+                            )
+                        }
                     { props.type === 'Description' ? (
                         <Fumi
 
@@ -131,7 +187,13 @@ export const Text_edit = (props) => {
                         <Fumi
                         onChangeText = {
                             (text) =>{
-                                setvalue(text)
+                                if (props.type === 'Name'){
+                                    validate_name()
+                                } else if (props.type === 'Contact') {
+                                    validate_phone()
+                                } else {
+                                    setvalue(text)
+                                }
                             }
                         }
                         value = {value}
@@ -151,45 +213,60 @@ export const Text_edit = (props) => {
                     
                     </View>
                     <Text style={{marginBottom: 8 , color : 'white'}}>
-                        The idea with React Native Elements is more about component structure than actual design.
+                        We highly recommend you provide relevant updates to make your profile stand out as suggested by the Multix Designs team 
                         </Text>
                         <Card.Divider/>
                         <View style = {styles.buttons_container}>
                         <Button title = {'Confirm'} onPress = {
                             ()=>{
-                                console.log('pressed')
-                                if (props.effect === 'business profile'){
-                                    let overall_data = {'update' : {data : value} , mode : props.mode , type : props.name }
-                                    props.state.request_business_json({
-                                        method : 'PUT',
-                                        url : 'update_business_profile',
-                                        data : overall_data,
-                                    }).then((response) => {
-                                        update_profile(props.effect,props.name,value)
-                                        props.update_profile_account_redux(props.name , value)
-                                        //let business_db = new business_database()
-                                        //let profile = business_db.business_data()
-                                        //setTimeout(()=>{
-                                        //props.store_profile_redux(profile)
-                                        //},3000)
-                                    })
-                                } else if ( props.effect === 'Gig' ){
-                                    let data = props.type
-                                    let overall_data = {'update' : {data : value} , mode : props.mode , Gig_id : props.id , type : props.name }
-                                    //console.log(overall_data)
-                                    props.state.request_business_json({
-                                        method : 'PUT',
-                                        url : 'update_gig',
-                                        data : overall_data,
-                                    }).then((response) => {
-                                        update_profile(props.effect,props.name,value)
-                                        //let business_db = new business_database()
-                                        //let gigs = business_db.gig_data()
-                                        //props.store_gigs_redux(gigs)
-                                        props.update_profile_gigs_redux(props.id , props.name , value)
-                                        //console.log(response.data)
-                                    })
+                                if (!name_error && props.type === 'Name'){
+                                    if (props.effect === 'business profile'){
+                                        let overall_data = {'update' : {data : value} , mode : props.mode , type : props.name }
+                                        props.state.request_business_json({
+                                            method : 'PUT',
+                                            url : 'update_business_profile',
+                                            data : overall_data,
+                                        }).then((response) => {
+                                            update_profile(props.effect,props.name,value)
+                                            props.update_profile_account_redux(props.name , value)
+                                            setdone(true)
+                                            setTimeout(()=>{
+                                                props.notifier()
+                                                setdone(false)
+                                            },800)
+                                            //let business_db = new business_database()
+                                            //let profile = business_db.business_data()
+                                            //setTimeout(()=>{
+                                            //props.store_profile_redux(profile)
+                                            //},3000)
+                                        })
+                                    } else if ( props.effect === 'Gig' ){
+                                        let data = props.type
+                                        let overall_data = {'update' : {data : value} , mode : props.mode , Gig_id : props.id , type : props.name }
+                                        //console.log(overall_data)
+                                        props.state.request_business_json({
+                                            method : 'PUT',
+                                            url : 'update_gig',
+                                            data : overall_data,
+                                        }).then((response) => {
+                                            update_profile(props.effect,props.name,value)
+                                            //let business_db = new business_database()
+                                            //let gigs = business_db.gig_data()
+                                            //props.store_gigs_redux(gigs)
+                                            props.update_profile_gigs_redux(props.id , props.name , value)
+                                            setdone(true)
+                                        
+                                            setTimeout(()=>{
+                                                props.notifier()
+                                                setdone(false)
+                                            },800)
+                                            //console.log(response.data)
+                                        })
+                                    }
+                                } else {
+                                    alert('Please enter a valid name to continue with the update')
                                 }
+                               
                                 
                             }
                         }/>
@@ -219,7 +296,8 @@ export const Text_edit = (props) => {
     
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state_redux) => {
+    let state = state_redux.business
     return {state}
     
 }
@@ -238,7 +316,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(Text_edit)
 const styles = StyleSheet.create({
     container : {
         position : 'absolute',
-        
         
     },
     text_input : {

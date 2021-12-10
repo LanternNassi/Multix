@@ -1,21 +1,24 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect } from 'react';
 import {View , Text , StyleSheet,FlatList , TouchableOpacity, Image} from 'react-native';
 import {Avatar , Card } from 'react-native-elements';
 import {connect} from 'react-redux';
 import {CirclesLoader} from 'react-native-indicator';
 import { ScreenHeight, ScreenWidth } from 'react-native-elements/dist/helpers';
+import NumberFormat from 'react-number-format'
 
 
 
 
-export class Notifications extends Component {
-    render() {
+export function Notifications(props) {
+    useEffect(()=>{
+
+    },[props.state.notifications])
         return (
             <View style = {{
                 flex : 1
             }}>
                 <FlatList 
-                    data = {[]}
+                    data = {props.state.Contracts_proposals}
                     horizontal = {false}
                     ItemSeparatorComponent = {
                         ()=>(
@@ -40,29 +43,35 @@ export class Notifications extends Component {
                         )
                     }
                     renderItem = {
-                        ()=>(
-                            <TouchableOpacity style = {styles.notification}>
-                                <Avatar rounded source = {require('../../images/test.jpg')} size = {'small'} />
+                        (item,index)=>{
+                            if (item.item.notification.Type !== 'Contract'){
+                                return (
+                                <TouchableOpacity style = {styles.notification}>
+                                <Avatar rounded source = {{uri : item.item.Applicant_info.Profile_pic }} size = {'small'} />
                                 <View style = {styles.message}>
-                                    <Text>
-                                    On the Insert tab, the galleries include items that are designed to coordinate with the overall look of your document. You can use these galleries to insert tables, headers, footers,
+                                    <Text style = {{ fontSize : 15 }}>
+                                        {item.item.notification.Message}
                                     </Text>
                                 </View>
 
-                            </TouchableOpacity>
-                        )
+                                </TouchableOpacity>
+                                )
+                            }
+                        }
+                            
                     }
                     
                  />
             </View>
         )
-    }
+    
 }
 
 let mapDispatchToProps = (dispatch) => ({
 
 })
-let mapStateToProps = (state) => {
+let mapStateToProps = (state_redux) => {
+    let state = state_redux.business
     return {state}
 
 }
@@ -72,10 +81,11 @@ export default connect( mapStateToProps , mapDispatchToProps )(Notifications)
 const styles = StyleSheet.create({
     notification : {
         width : ScreenWidth,
-        maxHeight : 0.3 * ScreenHeight,
+        height : 0.1 * ScreenHeight,
         backgroundColor : 'white',
         flexDirection : 'row',
         justifyContent : 'space-evenly',
+        alignItems : 'center'
     },
     message : {
         flexWrap : 'nowrap',
@@ -83,9 +93,9 @@ const styles = StyleSheet.create({
         maxHeight : 0.27 * ScreenHeight,
     },
     divider : {
-        height : 0.5,
+        height : 0.1,
         width : 0.9 * ScreenWidth,
-        borderWidth : 0.4,
+        borderWidth : 0.1,
     },
 
 

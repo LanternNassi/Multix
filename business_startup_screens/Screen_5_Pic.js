@@ -11,14 +11,14 @@ import * as Permissions from 'expo-permissions';
 
 
 export function Screen_5_Pic(props) {
-    const [Chosen_image , setChosen_image] = useState('')
+    const [Chosen_image , setChosen_image] = useState(null)
     const [Action , setAction] = useState(false)
     return (
         <ScrollView style = {styles.container}>
             
             <View style = {{ top : 20 , alignItems : 'center' }}>   
             <View style = {{ justifyContent : 'space-around' , alignItems : 'center' , width : ScreenWidth *0.9  }}>
-                <Avatar rounded containerStyle = {{ backgroundColor: props.state.theme.icons_surrounding , elevation : 10 }} icon = {{ name : 'user-plus' , color : props.state.theme.icons , type : 'font-awesome' }} size = {'medium'} />
+                <Avatar rounded containerStyle = {{ backgroundColor: props.fun.Layout_Settings.Icons_surroundings , elevation : 10 }} icon = {{ name : 'user-plus' , color : props.fun.Layout_Settings.Icons_Color , type : 'font-awesome' }} size = {'medium'} />
                 <Text style = {styles.disclaimer}>STEP 5 OF 6</Text>
                 <Text style = {{...styles.disclaimer , fontSize : 13 , fontWeight : '500' ,}}>Please endeavour to use a professional looking profile picture to get the best out of the market out there</Text>
             </View>
@@ -66,16 +66,16 @@ export function Screen_5_Pic(props) {
                         }
                     }
                 } >
-                <Avatar rounded containerStyle = {{ backgroundColor : 'white' , elevation : 10 ,  }} icon = {{  name : 'camera' , color : props.state.theme.icons_surrounding, type : 'font-awesome' }} size = {'medium'} />
+                <Avatar rounded containerStyle = {{ backgroundColor : props.fun.Layout_Settings.Icons_surroundings , elevation : 10 ,  }} icon = {{  name : 'camera' , color : props.fun.Layout_Settings.Icons_Color, type : 'font-awesome' }} size = {'medium'} />
                 </TouchableOpacity>
   </TouchableOpacity>
   <View style = {{ position : 'relative' , height : ScreenHeight * 0.2 , top : 50 , bottom : 0 }}>
         <TouchableOpacity onPress = {
             () => {
-                Chosen_image ? (props.send_info_pic(Chosen_image)) : ( '' )
+                Chosen_image ? (props.send_info_pic(Chosen_image)) : ('')
                 props.state.navigation.navigation.navigate('Certifications And Preferences')
             }
-        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.state.theme.icons_surrounding, justifyContent : 'center' , alignItems : 'center'  }}>
+        } style = {{ width : 180 , height : 42 , borderRadius :21  , backgroundColor : props.fun.Layout_Settings.Icons_Color, justifyContent : 'center' , alignItems : 'center'  }}>
             <Text style = {{color : 'white'}}>Next</Text>
         </TouchableOpacity>
 
@@ -85,14 +85,14 @@ export function Screen_5_Pic(props) {
         </ScrollView>
     )
 }
-let mapStateToProps = (state) => {
-    return {state}
+let mapStateToProps = (redux_state) => {
+    let state = redux_state.business
+    let fun = redux_state.fun
+    return {state,fun}
 }
 
 let mapDispatchToProps = (dispatch) => ({
-    send_info_pic : (Pic) => dispatch({type : 'Pic' , pic : Pic})
-
-
+    send_info_pic : (Pic) =>  dispatch({type : 'Pic' , pic : Pic})
 })
 
 export default connect(mapStateToProps,mapDispatchToProps)(Screen_5_Pic)
