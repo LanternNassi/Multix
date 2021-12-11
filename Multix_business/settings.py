@@ -174,8 +174,8 @@ django_heroku.settings(locals())
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATIC_URL = '/static/'
-StATICFILES_DIRS = [ os.path.join(BASE_DIR , "static") ]
+STATIC_URL = '/staticfiles/'
+StATICFILES_DIRS = [ os.path.join(BASE_DIR , "staticfiles") ]
 
 
 
