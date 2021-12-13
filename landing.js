@@ -12,6 +12,8 @@ import Gig_notifications from './websockets/Gig_notifications.js'
 import Chat from './websockets/Chat_notifications.js'
 import axios from 'axios'
 import fun_database from './redux/Database_fun_transactions.js';
+import Reconnectingwebsocket from 'react-native-reconnecting-websocket'
+
 
 
 const Tab = createBottomTabNavigator();
@@ -42,7 +44,7 @@ export function MyTabs(props) {
             Setbusiness_anime('slideInDown')
             axios({
               method : 'GET',
-              url : 'http://192.168.43.232:8000/fetch_contracts_notifications_proposals/',
+              url : 'http://multix-business.herokuapp.com/fetch_contracts_notifications_proposals/',
               data : {},
               headers : { 
                 'content-type' : 'application/json',
@@ -259,11 +261,15 @@ export function MyTabs(props) {
             //Defining the onError handler for the chat websockets
             Chat.onError((error)=>{
               props.connected(false)
+              props.offline_disconnect_chats()
+
             })
             Chat.onClose((error)=>{
               //props.notify_disconnect(true)
               setopen(false)
               props.connected(false)
+              props.offline_disconnect_chats()
+
             })
         } 
       }
@@ -340,7 +346,8 @@ let mapDispatchToProps = (dispatch) => ({
   update_online_chat : (chat) => dispatch({type : 'update_online_chat' , chat : chat }),
   disconnect_online_chat : (Name) => dispatch({ type : 'disconnect_online_chat' , Name : Name }),
   notify_disconnect : (value) => dispatch({ type : 'Refresh' , value : value }),
-  connected : (value) => dispatch({ type : 'Connected' , value : value })
+  connected : (value) => dispatch({ type : 'Connected' , value : value }),
+  offline_disconnect_chats : () => dispatch({ type : 'offline_disconnect_chats' })
 })
 
 

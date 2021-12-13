@@ -18,7 +18,7 @@ export const Feedback = (props) => {
         if (type === 'Feedback'){
             axios({
                 method : 'POST',
-                url : 'http://192.168.43.232:8040/Feedback',
+                url : 'http://multix-fun.herokuapp.com/Feedback',
                 data : feedback,
                 headers : {
                     'content-type' : 'application/json',
@@ -38,7 +38,7 @@ export const Feedback = (props) => {
         }else {
             axios({
                 method : 'POST',
-                url : 'http://192.168.43.232:8040/Issues',
+                url : 'http://multix-fun.herokuapp.com/Issues',
                 data : feedback,
                 headers : {
                     'content-type' : 'application/json',

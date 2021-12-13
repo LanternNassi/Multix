@@ -1,8 +1,9 @@
 
+import Reconnectingwebsocket from 'react-native-reconnecting-websocket'
 
 export class Chat{
     static init(id){
-        this.chat_ws = new WebSocket('ws://192.168.43.232:8040/ws/chat/' + id +'/')
+        this.chat_ws = new Reconnectingwebsocket('wss://multix-fun.herokuapp.com/ws/chat/' + id +'/')
     }
     static onMessage(handler){
         this.chat_ws.addEventListener('message' , handler)

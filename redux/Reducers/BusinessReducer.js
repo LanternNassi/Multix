@@ -182,7 +182,7 @@ export default BusinessReducer = (state = Overall_State , action) => {
         }
         case 'create_business_request_instances' : {
             state['request_business_json'] = axios.create({
-                baseURL : 'http://192.168.43.232:8000',
+                baseURL : 'http://multix-business.herokuapp.com',
                 timeout : 1000000,
                 headers : { 
                     'content-type' : 'application/json',
@@ -190,7 +190,7 @@ export default BusinessReducer = (state = Overall_State , action) => {
                 }
             })
             state['request_business_form'] = axios.create({
-                baseURL : 'http://192.168.43.232:8000',
+                baseURL : 'http://multix-business.herokuapp.com',
                 headers : { 
                     'content-type' : 'multipart/form-data',
                     'Authorization': 'Token ' + action.token ,

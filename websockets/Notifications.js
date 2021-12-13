@@ -36,7 +36,7 @@ export class notify{
                         console.log('update tokens')
                         axios({
                             method : 'PUT',
-                            url : 'http://192.168.43.232:8000/update_push_notification_token',
+                            url : 'https://multix-business.herokuapp.com/update_push_notification_token',
                             data : {'token' : token},
                             headers : {
                                 'content-type' : 'application/json',

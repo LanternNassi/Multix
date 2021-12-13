@@ -65,7 +65,7 @@ export class fun extends Component {
             if (this.props.state.fun.Messages){
                 axios({
                     method : 'GET',
-                    url : 'http://192.168.43.232:8040/Get_all_messages/',
+                    url : 'http://multix-fun.herokuapp.com/Get_all_messages/',
                     timeout : 1000000,
                     headers : {
                         'content-type' : 'application/json',

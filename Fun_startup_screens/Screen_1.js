@@ -21,7 +21,7 @@ export const Fun_1 = (props) => {
     const validate_name = () => {
         axios({
             method : 'POST',
-            url : 'http://192.168.43.232:8040/Verify_name',
+            url : 'http://multix-fun.herokuapp.com/Verify_name',
             data : {'username' : Name}
         }).then((response)=>{
             if (response.status === 200){
@@ -36,7 +36,7 @@ export const Fun_1 = (props) => {
     const validate_contact = () => {
         axios({
             method : 'POST',
-            url : 'http://192.168.43.232:8040/Verify_contact',
+            url : 'http://multix-fun.herokuapp.com/Verify_contact',
             data : {'contact' : Contact}
         }).then((response)=>{
             if (response.status === 200){

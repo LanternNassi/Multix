@@ -254,11 +254,11 @@ export function Gig_account (props) {
 
                     </View>
                      <View style = {styles.rating}> 
-                        <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : 'gold' }} rounded />  
-                        <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : 'gold' }} rounded />  
-                        <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : 'gold' }} rounded />  
-                        <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : 'gold' }} rounded />  
-                        <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : 'black' }} rounded />  
+                            <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : (props.state.Business_profile['Account'].Rating > 0 ? ('gold'):('black')) }} rounded />  
+                            <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : (props.state.Business_profile['Account'].Rating >= 1 ? ('gold'):('black')) }} rounded />  
+                            <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : (props.state.Business_profile['Account'].Rating >= 2 ? ('gold'):('black')) }} rounded />  
+                            <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : (props.state.Business_profile['Account'].Rating >= 3 ? ('gold'):('black')) }} rounded />  
+                            <Avatar icon = {{ name : 'star' , type : 'font-awesome' , size : 17 , color : (props.state.Business_profile['Account'].Rating >= 4 ? ('gold'):('black')) }} rounded />  
                      </View>
                      <View style = {{
                          flexDirection : 'row',

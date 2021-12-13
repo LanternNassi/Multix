@@ -66,7 +66,7 @@ export class fun_sign_up {
                   }
                   axios({
                       method : 'POST',
-                      url : 'http://192.168.43.232:8040/Check_contact_list',
+                      url : 'http://multix-fun.herokuapp.com/Check_contact_list',
                       data : {'Contacts' : official_numbers},
                       headers : { 
                         'content-type' : 'application/json',
@@ -132,7 +132,7 @@ export class fun_sign_up {
         let notification_token = await this.registerForPushNotificationsAsync() 
         axios({
             method : 'POST',
-            url : 'http://192.168.43.232:8040/SignUp',
+            url : 'http://multix-fun.herokuapp.com/SignUp',
             data : { 'info' : {...this.info, Notifications_token : notification_token}}
         }).then(async (response_1)=>{
             if (response_1.status === 201){
@@ -142,7 +142,7 @@ export class fun_sign_up {
                     form_data.append('Profile_pic' , this.profile_picture)
                     axios({
                         method : 'PUT',
-                        url : 'http://192.168.43.232:8040/SignUp_profilePic',
+                        url : 'http://multix-fun.herokuapp.com/SignUp_profilePic',
                         data : form_data,
                         headers : { 
                             'content-type' : 'multipart/form-data',

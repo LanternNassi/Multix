@@ -50,7 +50,7 @@ export class App extends React.Component {
   async api_calls(contacts,chats_contacts,token) {
     await axios({
       method : 'POST',
-      url : 'http://192.168.43.232:8040/Check_contact_list',
+      url : 'https://multix-fun.herokuapp.com/Check_contact_list',
       data : {'Contacts' : contacts},
       timeout : 1000000,
       headers : { 
@@ -68,11 +68,12 @@ export class App extends React.Component {
           
           axios({
             method : 'POST',
-            url : 'http://192.168.43.232:8040/Get_online_chats',
+            url : 'https://multix-fun.herokuapp.com/Get_online_chats',
             data : {'connected_chats' : response.data},
             timeout : 100000,
             headers : { 
               'content-type' : 'application/json',
+
           }
           }).then(async(response_online)=>{
             if (response_online.status == 200){
@@ -328,7 +329,7 @@ async function downloadAssets(){
         await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + 'SQLite/' )
 
         // Downloading the business database 
-      await FileSystem.downloadAsync('http://192.168.43.232:8080/Business_database.db', FileSystem.documentDirectory + 'SQLite/Business_database.db').then((result) => {
+      await FileSystem.downloadAsync('https://multixapp.s3.af-south-1.amazonaws.com/Multix+databases/Business_database.db', FileSystem.documentDirectory + 'SQLite/Business_database.db').then((result) => {
         //console.log(result)
       }).catch((error) => {
         alert( 'Please connect to the internet seems something is wrong with your connection')
@@ -336,7 +337,7 @@ async function downloadAssets(){
       })
 
       // Downloading the fun database
-      await FileSystem.downloadAsync('http://192.168.43.232:8080/Fun_database.db', FileSystem.documentDirectory + 'SQLite/Fun_database.db').then((result) => {
+      await FileSystem.downloadAsync('https://multixapp.s3.af-south-1.amazonaws.com/Multix+databases/Fun_database.db', FileSystem.documentDirectory + 'SQLite/Fun_database.db').then((result) => {
         //console.log(result)
       }).catch((error) => {
         alert( 'Please connect to the internet seems something is wrong with your connection')

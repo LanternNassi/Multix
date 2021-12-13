@@ -170,9 +170,9 @@ export function Settings(props) {
                     justifyContent : 'center',
                     alignItems : 'center'
                 }}>
-                    <Text style = {{ fontSize : 14 , }}> Multix Demo Version 1.0.0 </Text>
+                    <Text style = {{ fontSize : 14 , }}> Multix Version 1.0.0 </Text>
                     <Text style = {{ fontSize : 9 ,  }}> Special Regards to @Nessim and @Douglas </Text>
-                    <Text style = {{ fontSize : 9 ,  }}> For more information contact us at MultixApp@gmail.com </Text>
+                    <Text style = {{ fontSize : 9 ,  }}> For more information contact us at Multixapp@gmail.com </Text>
 
 
                 </View>

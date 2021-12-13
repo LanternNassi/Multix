@@ -146,7 +146,13 @@ export default FunReducer = (state = {
             }
         }
         case 'disconnect_online_chat' : {
-            delete( state['Online_chats'][action.Name])
+            delete(state['Online_chats'][action.Name])
+            return {
+                ...state
+            }
+        }
+        case 'offline_disconnect_chats' : {
+            state['Online_chats'] = {}
             return {
                 ...state
             }

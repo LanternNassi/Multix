@@ -198,7 +198,7 @@ static validate_numbers(official_numbers , token){
     let matched_data = []
     axios({
         method : 'POST',
-        url : 'http://192.168.43.232:8040/Check_contact_list',
+        url : 'http://multix-fun.herokuapp.com/Check_contact_list',
         data : {'Contacts' : official_numbers},
         headers : { 
           'content-type' : 'application/json',

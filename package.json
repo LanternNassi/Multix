@@ -58,6 +58,7 @@
     "react-native-paper": "^4.9.2",
     "react-native-paper-dropdown": "^1.0.7",
     "react-native-progress": "^5.0.0",
+    "react-native-reconnecting-websocket": "^1.0.3",
     "react-native-safe-area-context": "^3.3.2",
     "react-native-screens": "^3.6.0",
     "react-native-share": "^7.2.1",

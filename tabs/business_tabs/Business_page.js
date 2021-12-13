@@ -21,7 +21,7 @@ export function Business_page(props) {
         if (props.state.Business_profile.Account){
             axios({
                 method : 'GET',
-                url : 'http://192.168.43.232:8000/fill_gigs/?Gig_type=Selling' ,
+                url : 'http://multix-business.herokuapp.com/fill_gigs/?Gig_type=Selling' ,
                 headers : { 
                     'content-type' : 'application/json',
                     'Authorization': 'Token ' + props.state.Business_profile['Account']['Multix_token'] ,
@@ -60,7 +60,7 @@ export function Business_page(props) {
         if (props.state.Business_profile.Account){
             axios({
                 method : 'GET',
-                url : 'http://192.168.43.232:8000/fill_gigs/?Gig_type=Selling&Gig_name=' + name ,
+                url : 'http://multix-business.herokuapp.com/fill_gigs/?Gig_type=Selling&Gig_name=' + name ,
                 headers : { 
                     'content-type' : 'application/json',
                     'Authorization': 'Token ' + props.state.Business_profile['Account']['Multix_token'] ,

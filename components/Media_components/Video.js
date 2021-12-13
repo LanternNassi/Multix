@@ -73,7 +73,7 @@ export const Video_comp = (props) => {
                 form.append('File' , new_file )
                 axios({
                     method : 'POST',
-                    url : 'http://192.168.43.232:8040/Post_media',
+                    url : 'http://multix-fun.herokuapp.com/Post_media',
                     data : form,
                     timeout : 0,
                     headers : {
