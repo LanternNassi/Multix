@@ -195,9 +195,9 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Aws config
 
 AWS_LOCATION = 'static'
-AWS_ACCESS_KEY_ID ='AKIAZPSDYV63VD6XYDLO' 
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_STORAGE_BUCKET_NAME ='multapp'
+AWS_ACCESS_KEY_ID ='AKIA4DQUGFJXTF7CQDCT' 
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME ='mulapp'
 AWS_S3_CUSTOM_DOMAIN='%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 AWS_S3_OBJECT_PARAMETERS = {    
      'CacheControl': 'max-age=86400',
@@ -208,9 +208,9 @@ DEFAULT_FILE_STORAGE = 'Multix_business.storage_backends.MediaStorage'
 #     os.path.join(BASE_DIR, 'static'),
 # ] 
 #STATIC_URL='https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
-ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
+#ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
 # STATICFILES_FINDERS = (           
 #     'django.contrib.staticfiles.finders.FileSystemFinder',    
 #     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 # )
-AWS_DEFAULT_ACL = None
+#AWS_DEFAULT_ACL = None
