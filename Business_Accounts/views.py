@@ -61,6 +61,7 @@ from Gigs.models import (
 @permission_classes([])
 def create_business_account(request):
     approved_data = {}
+    print(request.data['Business account']['Date_of_birth'])
     #Creating a user at first
     created_user = User(username = request.data['Business account']['Name'] , password = request.data['Business account']['Password'])
     created_user.save()
@@ -111,8 +112,8 @@ def create_business_account(request):
 @permission_classes([])
 def validate_name(request):
     print(request.data['Name'])
-    try :
-        account = Business_Account.objects.get(Name = request.data['Name'])
+    try : 
+        account = User.objects.get(username = request.data['Name'])
         return Response(data = {'mesage':'In use'},status = status.HTTP_207_MULTI_STATUS)
     except :
         return Response(data = {'message' : 'true'} , status = status.HTTP_200_OK)

@@ -47,8 +47,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'channels',
     'channels_postgres',
-    'cloudinary_storage',
-    'cloudinary',
+    # 'cloudinary_storage',
+    # 'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -98,12 +98,12 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_postgres.core.PostgresChannelLayer',
         'CONFIG': {
-         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-         'NAME': 'multixbusiness',
-         'USER': 'postgres',
-         'PASSWORD': 'ntambinassim',
-         'HOST': 'multixbusiness.c3cyw3txnh6g.af-south-1.rds.amazonaws.com',
-         'PORT': '5432',
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'test_business_2',
+            'USER': 'postgres',
+            'PASSWORD': 'Nassim',
+            'HOST': '127.0.0.1',
+            'PORT': '5432',
         },
     },
 }
@@ -119,10 +119,10 @@ DATABASES = {
     #},
       'default': {
 		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': 'multixbusiness',
+		'NAME': 'test_business_2',
 		'USER': 'postgres',
-		'PASSWORD': 'ntambinassim',
-		'HOST': 'multixbusiness.c3cyw3txnh6g.af-south-1.rds.amazonaws.com',
+		'PASSWORD': 'Nassim',
+		'HOST': '127.0.0.1',
 		'PORT': '5432',
 	},
   
@@ -130,8 +130,11 @@ DATABASES = {
 
 
 
-prod_db  =  dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(prod_db)
+if (DEBUG != True):
+    prod_db  =  dj_database_url.config(conn_max_age=500)
+    DATABASES['default'].update(prod_db)
+    CHANNEL_LAYERS['default']['CONFIG'].update(prod_db)
+
 
 
 
@@ -192,20 +195,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # }
 # DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# MEDIA_ROOT = os.path.join(BASE_DIR, "Media")
-# MEDIA_URL = "/Media/"
+
+
+if (DEBUG != True):
+    AWS_LOCATION = 'static'
+    AWS_ACCESS_KEY_ID ='AKIA4DQUGFJXTF7CQDCT' 
+    AWS_SECRET_ACCESS_KEY = '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'
+    AWS_STORAGE_BUCKET_NAME ='mulapp'
+    AWS_S3_CUSTOM_DOMAIN='%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+    AWS_S3_OBJECT_PARAMETERS = {    
+        'CacheControl': 'max-age=86400',
+    }
+    DEFAULT_FILE_STORAGE = 'Multix_business.storage_backends.MediaStorage'
+else :
+    MEDIA_ROOT = os.path.join(BASE_DIR, "Media")
+    MEDIA_URL = "/Media/"
 
 # Aws config
 
-AWS_LOCATION = 'static'
-AWS_ACCESS_KEY_ID ='AKIA4DQUGFJXTF7CQDCT' 
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_STORAGE_BUCKET_NAME ='mulapp'
-AWS_S3_CUSTOM_DOMAIN='%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
-AWS_S3_OBJECT_PARAMETERS = {    
-     'CacheControl': 'max-age=86400',
-}
-DEFAULT_FILE_STORAGE = 'Multix_business.storage_backends.MediaStorage'
+
 #STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 # STATICFILES_DIRS = [
 #     os.path.join(BASE_DIR, 'static'),
