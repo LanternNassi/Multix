@@ -64,10 +64,10 @@ class Gig(models.Model):
     Gig_Projects = models.ManyToManyField(Gig_Project_Completed)
     Gig_Transactions = models.ManyToManyField(Gig_Transaction)
     Gig_Deals_Applicants = models.ManyToManyField(Gig_Deal_Applicant)
-    ShowCase_1 = models.ImageField(null = True , blank = True)
-    ShowCase_2 = models.ImageField(null = True , blank = True)
-    ShowCase_3 = models.ImageField(null = True , blank = True)
-    ShowCase_4 = models.ImageField(null = True , blank = True)
+    ShowCase_1 = models.ImageField(null = True , blank = True , upload_to='ShowCase_1/%Y/%m/%d')
+    ShowCase_2 = models.ImageField(null = True , blank = True, upload_to='ShowCase_2/%Y/%m/%d')
+    ShowCase_3 = models.ImageField(null = True , blank = True, upload_to='ShowCase_3/%Y/%m/%d')
+    ShowCase_4 = models.ImageField(null = True , blank = True, upload_to='ShowCase_4/%Y/%m/%d')
     def __str__(self):
         return (self.Gig_name)
 

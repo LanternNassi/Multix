@@ -57,7 +57,7 @@ def create_gig(request):
     admin_user = User.objects.get(username = request.user)
     bus_account = Business_Account.objects.get(user = admin_user)
     approved_data = {}
-    serializer_gig = Gig_serializer(data = {**request.data['word_info'] , 'Gig_expiration_date' : timezone.now() + timezone.timedelta(days = 30) , 'Account_id' : admin_user.id })
+    serializer_gig = Gig_serializer(data = {**request.data['word_info'] ,'Multix_token' : bus_account.Multix_token, 'Gig_expiration_date' : timezone.now() + timezone.timedelta(days = 30) , 'Account_id' : admin_user.id })
     if serializer_gig.is_valid():
         new_gig = serializer_gig.create(serializer_gig.validated_data)
         bus_account.Gigs.add(new_gig)

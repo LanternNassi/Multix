@@ -70,7 +70,7 @@ class Business_Account(models.Model):
     Description = models.CharField(max_length=1000,verbose_name="Descriptions",blank = False , null = True)
     Place_of_residence = models.CharField(max_length=100 , blank = False ,)
     Date_of_birth = models.DateField(verbose_name="Dates of birth")
-    Profile_pic = models.ImageField()
+    Profile_pic = models.ImageField(upload_to='Profile_pics/%Y/%m/%d')
     Rating = models.IntegerField(blank = False , null = False )
     Date_of_creation = models.DateTimeField( default = datetime.datetime.now()  )
     Preference_1 = models.CharField(verbose_name="Preferences" , blank = True , null = True , max_length = 30)

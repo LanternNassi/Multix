@@ -99,7 +99,7 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels_postgres.core.PostgresChannelLayer',
         'CONFIG': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'test_business_2',
+            'NAME': 'test_1',
             'USER': 'postgres',
             'PASSWORD': 'Nassim',
             'HOST': '127.0.0.1',
@@ -119,7 +119,7 @@ DATABASES = {
     #},
       'default': {
 		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': 'test_business_2',
+		'NAME': 'test_1',
 		'USER': 'postgres',
 		'PASSWORD': 'Nassim',
 		'HOST': '127.0.0.1',
