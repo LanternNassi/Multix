@@ -70,6 +70,7 @@ class Gigs_consumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.room_group_name = self.scope['url_route']['kwargs']['room_name']
         self.user = await database_sync_to_async(self.authenticate_user)(self.room_group_name) 
+        print(self.user.id , "From connect")
         if self.user :
             await self.accept()
             await self.channel_layer.group_add(
@@ -106,7 +107,6 @@ class Gigs_consumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self , content):
         type_of_notification = content['type']
         if (type_of_notification == 'Bidding'):
-            print('here')
             content['notification']['Message'] = '{} has bid on your gig {} with an amount of {}'.format(self.room_group_name,content['gig'],content['amount'])
             content['notification']['notifier_id'] = self.user.id
             Notifications_token = await database_sync_to_async(self.Save_notification)(content['account_id'],content['notification'],content['contract_type_id'])
@@ -118,7 +118,7 @@ class Gigs_consumer(AsyncJsonWebsocketConsumer):
                     'id' : self.user.id,
                 }
             )
-            send_push_message(Notifications_token ,'Multix Hot deals', content['notification']['Message'])
+            # send_push_message(Notifications_token ,'Multix Hot deals', content['notification']['Message'])
             print('sent')
         if (type_of_notification == 'Hiring'):
             content['notification']['Message'] = '{} has applied for your gig {} . Want to let him in ???'.format(self.room_group_name,content['gig'])
@@ -132,7 +132,7 @@ class Gigs_consumer(AsyncJsonWebsocketConsumer):
                     'id' : self.user.id,
                 }
             )
-            send_push_message(Notifications_token ,'Multix Hiring Gigs' ,content['notification']['Message'])
+            # send_push_message(Notifications_token ,'Multix Hiring Gigs' ,content['notification']['Message'])
         if (type_of_notification == 'Selling'):
             content['notification']['Message'] = 'Seems {} is interested in your project {} . He wants to talk more with you '.format(self.room_group_name, content['gig'])
             content['notification']['notifier_id'] = self.user.id
@@ -145,7 +145,7 @@ class Gigs_consumer(AsyncJsonWebsocketConsumer):
                     'id' : self.user.id
                 }
             )
-            send_push_message(Notifications_token ,'Multix Selling Gigs', content['notification']['Message'])
+            # send_push_message(Notifications_token ,'Multix Selling Gigs', content['notification']['Message'])
         if (type_of_notification == 'Approve'):
             Message = 'Lol !!! {} has approved your gig {} . Its time to get our hands dirty for a second . For any queries try contacting our support or the client'.format(self.room_group_name , content['gig'])
             await self.channel_layer.group_send(
@@ -166,8 +166,8 @@ class Gigs_consumer(AsyncJsonWebsocketConsumer):
                     'id' : self.user.id
                 }
             )
-            token = await database_sync_to_async(self.get_notifications_token)(content['account_id'])
-            send_push_message(token ,'Multix Gig Approval', Message)
+            # token = await database_sync_to_async(self.get_notifications_token)(content['account_id'])
+            # send_push_message(token ,'Multix Gig Approval', Message)
 
     async def disconnect(self , close_code):
         await self.channel_layer.group_discard(

@@ -15,7 +15,7 @@ from django.contrib.auth.models import User
 
 
 class Gig_Applicant_serializer(serializers.ModelSerializer):
-    '''Class for serializing Gig Applicants '''
+    '''Class for serializing Gig Applicants(takes in all the fields of the Gig_Applicant i.e gig_id , Account_id_of_customer , Date_of_application , Approved) '''
     class Meta : 
         model = Gig_Applicant
         fields = '__all__'
@@ -32,6 +32,7 @@ class Gig_Applicant_serializer(serializers.ModelSerializer):
 
 
 class Gig_Deal_Applicant_serializer(serializers.ModelSerializer):
+    """ class for serializing Gig_Deal_Applicant(fields taken : gig_id , Bid_amount , Account_id_of_customer , Date_of_application , Approved) """
     class Meta :
         model = Gig_Deal_Applicant
         fields = '__all__'
@@ -41,7 +42,7 @@ class Gig_Deal_Applicant_serializer(serializers.ModelSerializer):
         return new_deal_applicant
 
 class Gig_Project_completed_serilizer(serializers.ModelSerializer):
-    '''Serializer for serializing gig active projects '''
+    '''Serializer for serializing gig active projects( fields taken : gig_id , Account_id_of_customer , Date_of_application , Extra_info , Approved) '''
     class Meta : 
         model = Gig_Project_Completed
         fields = '__all__'
@@ -57,7 +58,7 @@ class Gig_Project_completed_serilizer(serializers.ModelSerializer):
         return instance
 
 class Gig_Transaction_serializer(serializers.ModelSerializer):
-    '''Serializer for serializing gig Transaction'''
+    '''Serializer for serializing gig Transaction(fields taken : From_gig_id , To_gig_id , From_account_id , To_account_id , Date_of_transaction , Transaction_id )'''
     class Meta :
         model = Gig_Transaction
         field = '__all__'
@@ -75,7 +76,7 @@ class Gig_Transaction_serializer(serializers.ModelSerializer):
         return instance
 
 class Gig_Additional_info_serializer(serializers.ModelSerializer):
-    '''Serializer for serializing gig additional info '''
+    '''Serializer for serializing gig additional info(fields taken : gig_id , Name ) '''
     class Meta : 
         model = Gig_Additional_info
         exclude = ['File']
@@ -91,6 +92,7 @@ class Gig_Additional_info_serializer(serializers.ModelSerializer):
         return instance
 
 class Gig_serializer(serializers.ModelSerializer):
+    """ Class for serializing Gig data (excluded fields : Gig_info , Gig_Applicants ,Gig_Projects, Gig_Transactions , Gig_Deals_Applicants , All ShowCases  ) """
     class Meta :
         model = Gig
         exclude = [
@@ -130,6 +132,7 @@ class Gig_serializer(serializers.ModelSerializer):
 
 # ======================================Start of fetching serializers======================================================
 class gigs (serializers.HyperlinkedModelSerializer):
+    """ class for serializing basic gig info ( fields taken : Gig_info , Gig_Deals_Applicants , Gig_Projects , Gig_Applicants )  """
     Gig_info = Gig_Additional_info_serializer(many=True)
     Gig_Deals_Applicants = Gig_Deal_Applicant_serializer(many = True)
     Gig_Projects = Gig_Project_completed_serilizer(many = True)
@@ -140,6 +143,21 @@ class gigs (serializers.HyperlinkedModelSerializer):
             'url'
         ]        
 class slicer_gigs(serializers.Serializer):
+    """ class for serializing also basic gig info for showcasing
+        fields taken :
+            Name
+            Place_of_residence
+            Profile_pic
+            Rating
+            Gig_name
+            Gig_type
+            Gig_date_of_creation
+            Gig_salary
+            ShowCase_1
+            Gig_id
+            Account_id
+            Count
+     """
     Name = serializers.CharField(required=True)
     Place_of_residence = serializers.CharField(required=True)
     Profile_pic = serializers.CharField()
@@ -154,6 +172,7 @@ class slicer_gigs(serializers.Serializer):
     Count = serializers.IntegerField()
 
 class slicer_hot_deal_bidders(serializers.Serializer):
+    """ class for serializing hot deal bidders ( fields taken : Name , Profile_pic , Bid_amount , Date_of_application) """
     Name = serializers.CharField(required=True)
     Profile_pic = serializers.CharField()
     Bid_amount = serializers.IntegerField()

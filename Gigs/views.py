@@ -54,6 +54,7 @@ from Business_Accounts.models import (
 @authentication_classes([BasicAuthentication, SessionAuthentication , TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def create_gig(request):
+    """ View function for creating a new gig"""
     admin_user = User.objects.get(username = request.user)
     bus_account = Business_Account.objects.get(user = admin_user)
     approved_data = {}
@@ -64,9 +65,7 @@ def create_gig(request):
         final = Gig_serializer(new_gig)
         approved_data['Gig_account'] = final.data
         approved_data['Gig_id'] = new_gig.id
-        print('Gig_created')
     else :
-        print(serializer_gig._errors)
         return Response(data = {'errors' : serializer_gig._errors , 'from' : 'create_gig'})
     if request.data['Additional_info'] :
         adds = []
@@ -85,11 +84,12 @@ def create_gig(request):
     return Response(data = approved_data , status = status.HTTP_201_CREATED)
     
 
-
+#View function for updating the gig case
 @api_view(['PUT',])
 @authentication_classes([BasicAuthentication , SessionAuthentication , TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def updating_gig_case(request ,id):
+    """ View function for updating the gig case """
     gig = Gig.objects.get(id = id)
     if request.FILES['ShowCase_1']:
         gig.ShowCase_1 = request.FILES['ShowCase_1']
@@ -120,16 +120,18 @@ def updating_gig_case_2(request,id):
     return Response(data = {'mode' , 'success'} , status = status.HTTP_202_ACCEPTED)
 
 
-
+# View function for updaing the gig data
 @api_view(['PUT',])
 @authentication_classes([BasicAuthentication , SessionAuthentication , TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def updating_gig(request):
+    """ View function for updating gig data """
     user = request.user
     user_account  = User.objects.get(username = user)
     account = Business_Account.objects.get(user = user_account)
     gig = account.Gigs.get(id = request.data['Gig_id'])
     mode = request.data['mode']
+    # If the mode of the data falls in the category of basic information
     if (mode == 'General_info'):
         info_data = Gig_serializer(gig)
         overall = { request.data['type'] : request.data['update']['data']  }
@@ -139,6 +141,7 @@ def updating_gig(request):
             return Response(data = Gig_serializer(updated_instance).data , status = status.HTTP_202_ACCEPTED)
         else : 
             return Response(data = serializer._errors , status = status.HTTP_406_NOT_ACCEPTABLE)
+    # if the mode of the data falls in the category of additional information
     if (mode == 'additional_info'):
         official_add_info = []
         for i in request.data['update']['data']:
@@ -159,13 +162,15 @@ def updating_gig(request):
 
 # ======================================Start of fetching views======================================================
 
+# View function fo getting gigs 
 @api_view(['GET',])
 @authentication_classes([BasicAuthentication , SessionAuthentication , TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def get_gigs(request):
+    """View function fo getting gigs """
     processed_data = []
     gig_type = request.GET.get('Gig_type',"Hiring")
-    print(gig_type)
+    # print(gig_type)
     gig_name = request.GET.get('Gig_name' , '')
     queryset = Gig.objects.all().order_by('-Gig_date_of_creation')[:100]
     if gig_name != '' : 
@@ -178,11 +183,9 @@ def get_gigs(request):
         business_account = Business_Account.objects.get(user = admin_user)
         #account_id = business_account.id
         serialized_gig = gigs(obj , context={'request': request})
-        print(serialized_gig.data)
-        if serialized_gig.data['ShowCase_1'] == None : 
-            #print(serialized_gig.data['ShowCase_1'])
-            serialized_gig.data['ShowCase_1'] = 'No pic'
+       
         gig_id = obj.id
+        # print(serialized_gig.data['ShowCase_1'])
         Number = 0
         if obj.Gig_type == 'Hiring':
             Number = obj.Gig_Applicants.count()
@@ -190,13 +193,46 @@ def get_gigs(request):
         if serialized_account.data['Profile_pic'] == 'null' :
             serialized_account.data['Profile_pic'] = 'None'
         #print(serialized_account.data)
-        serialized_processed_data = slicer_gigs(data = {
-            **serialized_account.data ,
-            **serialized_gig.data ,
-            'Gig_id' : gig_id,
-            'Account_id' : account_id,
-            'Count' : Number
-            })
+        if serialized_gig.data['ShowCase_1']:
+            if serialized_account.data['Profile_pic']: 
+                serialized_processed_data = slicer_gigs(data = {
+                **serialized_account.data ,
+                **serialized_gig.data ,
+                'Gig_id' : gig_id,
+                'Account_id' : account_id,
+                'Count' : Number
+                })
+            else :
+                serialized_processed_data = slicer_gigs(data = {
+                **serialized_account.data ,
+                **serialized_gig.data ,
+                'Gig_id' : gig_id,
+                'Account_id' : account_id,
+                'Count' : Number,
+                'Profile_pic' : 'null'
+                })
+        #print(serialized_gig.data['ShowCase_1'])
+        else :
+            if serialized_account.data['Profile_pic']:
+                serialized_processed_data = slicer_gigs(data = {
+                **serialized_account.data ,
+                **serialized_gig.data ,
+                'Gig_id' : gig_id,
+                'Account_id' : account_id,
+                'Count' : Number,
+                'ShowCase_1' : 'null'
+                })
+            else :
+                serialized_processed_data = slicer_gigs(data = {
+                **serialized_account.data ,
+                **serialized_gig.data ,
+                'Gig_id' : gig_id,
+                'Account_id' : account_id,
+                'Count' : Number,
+                'ShowCase_1' : 'null',
+                'Profile_pic' : 'null'
+                })
+        
         if serialized_processed_data.is_valid():
             processed_data.append(serialized_processed_data.validated_data)
         else : 
@@ -231,11 +267,14 @@ def hot_deal_bidders(request):
             account = Business_Account.objects.get(user = admin_customer)
             serialized_account = get_Account(account , context={'request': request})
             serialized_dealer = Gig_Deal_Applicant_serializer(dealer)
-            hot_deal = slicer_hot_deal_bidders(data={**serialized_account.data , **serialized_dealer.data})
+            if(account.Profile_pic):
+                hot_deal = slicer_hot_deal_bidders(data={**serialized_account.data , **serialized_dealer.data})
+            else :
+                hot_deal = slicer_hot_deal_bidders(data={**serialized_account.data , **serialized_dealer.data , 'Profile_pic' : 'null'})
             if hot_deal.is_valid():        
                 approved_data.append(hot_deal.validated_data)
             else :
-                print('Invalid')
+                print(hot_deal.errors)
         return Response(data = approved_data , status = status.HTTP_200_OK)
     else :
         return Response(data = [] , status = status.HTTP_200_OK)
@@ -265,11 +304,14 @@ def hot_deal_apply(request):
     if serialized_contract.is_valid():
         created_contract = serialized_contract.create(serialized_contract.validated_data)
         account.Contracts.add(created_contract)
+    else :
+        print(serialized_contract.errors)
     if serialized_dealer.is_valid():
         new_applicant = serialized_dealer.create(serialized_dealer.validated_data)
         gig.Gig_Deals_Applicants.add(new_applicant)
         return Response(data = {**Gig_Deal_Applicant_serializer(new_applicant).data , 'Date' : time , 'Type_id_contract' : created_contract.id , 'Type_id_deal' : new_applicant.id} , status = status.HTTP_201_CREATED)
     else : 
+        print(serialized_dealer.errors)
         return Response(data = serialized_dealer._errors , status = status.HTTP_500_INTERNAL_SERVER_ERROR,)
 
 @api_view(['POST',])
@@ -325,9 +367,9 @@ def selling_create(request):
         applicant = serialized_applicant.create(serialized_applicant.validated_data)
         gig.Gig_Projects.add(applicant)
         approved_data = []
-        print( request.data['Account_id'])
-        account = Business_Account.objects.get(id = request.data['Account_id'])
-        account = Business_account.objects.get(user = user)
+        # print( request.data['Account_id'])
+        # account = Business_Account.objects.get(id = request.data['Account_id'])
+        account = Business_Account.objects.get(user = user)
         contract = {
             'Contract_owner_id' : gig.Account_id,
             'Type' : 'Selling',
@@ -353,8 +395,9 @@ def selling_create(request):
                 approved_data.append(compacted)
             else :
                 pass
-        return Response(data = { 'Suggestions' : approved_data , 'Date' : time , 'contract_id' : created_contract.id , 'Selling_id' : appplicant.id} , status = status.HTTP_202_ACCEPTED)
+        return Response(data = { 'Suggestions' : approved_data , 'Date' : time , 'contract_id' : created_contract.id , 'Selling_id' : applicant.id} , status = status.HTTP_202_ACCEPTED)
     else :
+        print(serialized_applicant.errors)
         return Response(data = serialized_applicant.errors , status = status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -497,6 +540,7 @@ def approve_gig(request):
         contract.save()
         success = 'success'
     return Response(data = success , status = status.HTTP_202_ACCEPTED)
+
 
 @api_view(['PUT',])
 @authentication_classes([BasicAuthentication , SessionAuthentication , TokenAuthentication])
