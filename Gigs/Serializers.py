@@ -170,6 +170,7 @@ class slicer_gigs(serializers.Serializer):
     Gig_id = serializers.CharField()
     Account_id = serializers.CharField()
     Count = serializers.IntegerField()
+    
 
 class slicer_hot_deal_bidders(serializers.Serializer):
     """ class for serializing hot deal bidders ( fields taken : Name , Profile_pic , Bid_amount , Date_of_application) """
